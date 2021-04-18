@@ -1,6 +1,11 @@
-package com.seq;
+package com.seq.util;
 
 import java.util.*;
+
+import com.seq.board.Board;
+import com.seq.board.Square;
+import com.seq.cards.Card;
+import com.seq.cards.Hand;
 
 public class RangeUtil {
 
@@ -22,7 +27,7 @@ public class RangeUtil {
 			Set<Square> axisRange = getAxisRange( getAxisSquares( square, axis ) );
 			System.out.println( "Range[" + square + "]-Axis[" + axis + "]  = " + axisRange );
 			if( axisRange != null ) {
-				square.myAxisRanges.put( axis, axisRange );
+				square.getMyAxisRanges().put( axis, axisRange );
 				range.addAll( axisRange );
 			}
 		}
@@ -61,7 +66,7 @@ public class RangeUtil {
 	
 	private static Square getNextSquare( Square square, int axis, boolean goForward ) {
 		int step = getStepSize( axis ) * ( goForward ? 1 : -1 );
-		return Board.get().getSquare( square.positionNumber + step );
+		return Board.get().getSquare( square.getPositionNumber() + step );
 	}
 
 	private static int getStepSize( int axis ) {

@@ -1,6 +1,9 @@
-package com.seq;
+package com.seq.board;
 
 import java.util.*;
+
+import com.seq.*;
+import com.seq.cards.*;
 
 public class Square implements Comparable<Square> {
 
@@ -16,7 +19,7 @@ public class Square implements Comparable<Square> {
 	}
 	
 	public static boolean isOpponents( Square square ) {
-		return square != null && !square.color.isEmpty() && !square.color.equals( SeqBot.get().myTokenColor );
+		return square != null && !square.color.isEmpty() && !square.color.equals( SeqBot.get().getMyTokenColor() );
 	}
 	
 	public void addToMyRange( Collection<Square> squares ) {
@@ -34,6 +37,42 @@ public class Square implements Comparable<Square> {
 	public Set<Square> getOpponentRange() {
 		return this.opponentRange;
 	}
+	
+	public Map<Integer, Set<Square>> getMyAxisRanges() {
+		return myAxisRanges;
+	}
+
+	public Integer getPositionNumber() {
+		return positionNumber;
+	}
+
+	public void setPositionNumber(Integer positionNumber) {
+		this.positionNumber = positionNumber;
+	}
+
+	public int getRow() {
+		return row;
+	}
+
+	public void setRow(int row) {
+		this.row = row;
+	}
+
+	public int getCol() {
+		return col;
+	}
+
+	public void setCol(int col) {
+		this.col = col;
+	}
+
+	public String getColor() {
+		return color;
+	}
+
+	public void setColor(String color) {
+		this.color = color;
+	}
 
 	@Override
 	public int compareTo( Square o ) {
@@ -45,11 +84,11 @@ public class Square implements Comparable<Square> {
 		return "[" + getCard().toString() + "=" + this.color + "]";
 	}
 	
-	Map<Integer, Set<Square>> myAxisRanges = new HashMap<>();
-	Integer positionNumber;
-	int row;
-	int col;
-	String color;
+	private Integer positionNumber;
+	private int row;
+	private int col;
+	private String color;
+	private Map<Integer, Set<Square>> myAxisRanges = new HashMap<>();
 	private Set<Square> myRange = new TreeSet<>();
 	private Set<Square> opponentRange = new TreeSet<>();
 }

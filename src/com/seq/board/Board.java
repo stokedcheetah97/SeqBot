@@ -1,6 +1,8 @@
-package com.seq;
+package com.seq.board;
 
 import java.util.*;
+
+import com.seq.cards.*;
 
 public class Board {
 	
@@ -8,7 +10,7 @@ public class Board {
 		Set<Square> squares = new TreeSet<>();
 		for( int i=1; i<101; i++ ) {
 			Square square = getSquare(i);
-			if( square != null && square.color.isEmpty() && square.getCard().equals( card ) ) 
+			if( square != null && square.getColor().isEmpty() && square.getCard().equals( card ) ) 
 				squares.add( square );
 		}
 		return squares;
@@ -21,7 +23,7 @@ public class Board {
 	public Square getSquare( int positionNumber ) {
 		if( positionNumber < 1 || positionNumber > 100 ) return null;
 		for( Square t: this.tokens )
-			if( t.positionNumber == positionNumber ) return t;
+			if( t.getPositionNumber() == positionNumber ) return t;
 		return new Square( positionNumber, "" );
 	}
 	

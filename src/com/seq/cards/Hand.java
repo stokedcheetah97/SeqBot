@@ -1,6 +1,8 @@
-package com.seq;
+package com.seq.cards;
 
 import java.util.*;
+
+import com.seq.SeqBot;
 
 public class Hand {
 

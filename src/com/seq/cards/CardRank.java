@@ -1,7 +1,4 @@
-package com.seq;
-
-import java.util.Arrays;
-import java.util.List;
+package com.seq.cards;
 
 public class CardRank {
 	
@@ -22,6 +19,7 @@ public class CardRank {
 	public static final String CARD_A = "A";
 	public static final String WILD = "W";
 
-	static List<String> rankNames = Arrays.asList( "", CARD_A, CARD_K, CARD_Q, CARD_J, CARD_T, CARD_9, CARD_8, CARD_7, CARD_6, CARD_5, CARD_4, CARD_3, CARD_2 );
-	static List<Integer> rankValues = Arrays.asList( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 );
+	public static final String [] RANK_NAMES = new String [] { "", CARD_A, CARD_K, CARD_Q, CARD_J, CARD_T, CARD_9, CARD_8, CARD_7, CARD_6, CARD_5, CARD_4, CARD_3, CARD_2 };
+	public static final Integer [] RANK_VALUES = new Integer [] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+
 }
