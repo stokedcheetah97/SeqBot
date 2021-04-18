@@ -112,9 +112,9 @@ public class GuiController extends JFrame {
 	private JPanel guiPanel = null;
 	private JTextField tokenPosition = new JTextField();
 	private JCheckBox oneEyedJackCheckbox = new JCheckBox();
-	private JComboBox<String> cardRankPicklist = new JComboBox<String>( ( (String[]) CardRank.RANK_NAMES ) );
-	private JComboBox<String> cardSuitPicklist = new JComboBox<String>( ( (String[]) CardSuit.SUIT_NAMES ) );
-	private JComboBox<String> opponentSuitPicklist = new JComboBox<String>( ( (String[]) CardSuit.SUIT_NAMES ) );
-	private JComboBox<String> opponentColorPicklist = new JComboBox<String>( ( (String[]) TokenColor.COLORS ) );
-	private JComboBox<String> myColorPicklist = new JComboBox<String>( ( (String[]) TokenColor.COLORS ) );
+	private JComboBox<String> cardRankPicklist = new JComboBox<String>( CardRank.RANK_NAMES );
+	private JComboBox<String> cardSuitPicklist = new JComboBox<String>( CardSuit.SUIT_NAMES );
+	private JComboBox<String> opponentSuitPicklist = new JComboBox<String>( CardSuit.SUIT_NAMES );
+	private JComboBox<String> opponentColorPicklist = new JComboBox<String>( TokenColor.COLORS );
+	private JComboBox<String> myColorPicklist = new JComboBox<String>( TokenColor.COLORS );
 }
