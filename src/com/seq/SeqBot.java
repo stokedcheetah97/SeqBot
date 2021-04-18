@@ -14,15 +14,15 @@ public class SeqBot {
 	
 	public static void main( String[] args ) {
 		System.out.println( "SeqBot loading..." );
-		GuiController.get();
-		System.out.println( "SeqBot has become self-aware" );
-		if( MOCK_HAND ) mockHand();
-		
 		GuiController.get().init();
+		System.out.println( "SeqBot has become self-aware" );
 		if( MOCK_HAND ) {
+			mockHand();
 			get().setStatusMsg( "  My Hand:                    " + Hand.get() );
-			GuiController.get().refresh();
-		}
+		} else 
+			get().setStatusMsg( "  SeqBot must draw " + NUM_CARDS + " cards to begin" );
+		
+		GuiController.get().refresh();
 	}
 	
 	public void processRequest() {
@@ -102,8 +102,10 @@ public class SeqBot {
 	private void logError( Exception ex, String msg ) {
 		errMsg = ( ex.getMessage().startsWith( "Silly human" ) ? "" : msg  + " - " ) + ex.getMessage();
 		System.out.println( msg );
-		report( "Error-State Report" );
-		ex.printStackTrace();
+		if( !ex.getMessage().startsWith( "Silly human" ) ) {
+			report( "Error-State Report" );
+			ex.printStackTrace();
+		}
 	}
 	
 	private void report(String id) {
@@ -191,6 +193,10 @@ public class SeqBot {
 
 	public String getErrMsg() {
 		return errMsg;
+	}
+	
+	public void setErrMsg(String errMsg) {
+		this.errMsg = errMsg;
 	}
 	
 	public String getStatusMsg() {

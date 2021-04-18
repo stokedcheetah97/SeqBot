@@ -149,7 +149,7 @@ public class PanelBuilder {
 					SeqBot.get().setCalcNextMove( true );
 					SeqBot.get().setOpponentTokenColor( (String) GuiController.get().getOpponentColorPicklist().getSelectedItem() );
 					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
-					GuiController.processRequest();
+					SeqBot.get().processRequest();
 					if( SeqBot.get().getErrMsg() == null ) {
 						String msg = "Play " + SeqBot.get().getMyTokenColor() + " token on " + Board.getSquare( SeqBot.get().getMyNextMove().get(0) ).getCard() + " @Pos # " + SeqBot.get().getMyNextMove().get(0);
 						if( SeqBot.get().getMyNextMove().size() > 1 ) 
@@ -157,7 +157,7 @@ public class PanelBuilder {
 						System.out.println( msg );
 						GuiController.showInfo(  msg );
 					} else
-						GuiController.showError( SeqBot.get().getErrMsg() );
+						GuiController.showError();
 					SeqBot.get().setStatusMsg( "Hand [ " + Hand.get() + " ]" );
 				} catch( Exception ex ) {
 					JOptionPane.showMessageDialog( GuiController.get(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
@@ -181,22 +181,21 @@ public class PanelBuilder {
 					int cardSuitIndex = GuiController.get().getCardSuitPicklist().getSelectedIndex();
 					if( cardRank != null && cardSuitIndex > 0 ) {
 						SeqBot.get().setMyNewCard( new Card( CardSuit.SUIT_CODES[cardSuitIndex], cardRank ) );
-						GuiController.processRequest();
+						SeqBot.get().processRequest();
 						if( SeqBot.get().getErrMsg() == null )
 							System.out.println( "Add " + SeqBot.get().getMyNewCard() + " to hand" );
 						else
-							GuiController.showError( SeqBot.get().getErrMsg() );
+							GuiController.showError();
 						SeqBot.get().setStatusMsg("Hand [ " + Hand.get() + " ]");
 					} else {
-						System.out.println( "Register opponents move" );
-						GuiController.processRequest();
+						SeqBot.get().processRequest();
 						if( SeqBot.get().getErrMsg() == null )
 							GuiController.showInfo( "Played " + SeqBot.get().getOpponentTokenColor() + " token for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos # " + SeqBot.get().getOpponentPos() );
 						else
-							GuiController.showError( SeqBot.get().getErrMsg() );
+							GuiController.showError();
 					}
 				} catch( Exception ex ) {
-					GuiController.showError( ex.getMessage() );
+					SeqBot.get().setErrMsg( ex.getMessage() );
 					ex.printStackTrace();
 				}
 				GuiController.get().refresh();

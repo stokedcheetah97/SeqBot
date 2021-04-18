@@ -50,20 +50,14 @@ public class GuiController extends JFrame {
 		repaint();
 		System.out.println( "SeqBot feels refreshed!" );
 	}
-
-	public static void processRequest() {
-		try{
-			SeqBot.get().processRequest();
-        	//Thread.sleep( 250 );
-        } catch(Exception ex){ ex.printStackTrace(); }
-	}
 	
 	public static void showInfo( String msg ) {
 		JOptionPane.showMessageDialog( GuiController.get(), msg, "Action Required", JOptionPane.OK_OPTION );
 	}
 	
-	public static void showError( String msg ) {
-		JOptionPane.showMessageDialog( GuiController.get(), msg, "Error", JOptionPane.ERROR_MESSAGE );
+	public static void showError() {
+		JOptionPane.showMessageDialog( GuiController.get(), SeqBot.get().getErrMsg(), "Error", JOptionPane.ERROR_MESSAGE );
+		SeqBot.get().setErrMsg( null );
 	}
 	
 	public static GuiController get() {
