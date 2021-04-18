@@ -15,17 +15,19 @@ public class Deck {
 	
 	public static void playCard( Card card )  throws Exception {
 		System.out.println( "Play card: " + card );
-		if( PLAYED_CARDS.get( card ) == null ) PLAYED_CARDS.put( card, 0 );
-		
-		PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
-		if( PLAYED_CARDS.get( card ) > 2 ) 
-			throw new Exception( "Cannot play 3 of the same card!  Card = " + card.toString() );
-
+		if( card.getRank().equals( CardRank.CARD_J ) ) 
+			playJack( card );
+		else {
+			if( PLAYED_CARDS.get( card ) == null ) PLAYED_CARDS.put( card, 0 );
+			PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
+			if( PLAYED_CARDS.get( card ) > 2 ) 
+				throw new Exception( "Cannot play 3 of the same card!  Card = " + card.toString() );
+		}
 	}
 	
-	public static void playJack( Card card, String suit )  throws Exception {
+	private static void playJack( Card card )  throws Exception {
 		
-		if( suit.equals( CardSuit.DIAMONDS ) || card.getSuit().equals( CardSuit.CLUBS ) ) {
+		if( card.getSuit().equals( CardSuit.DIAMONDS ) || card.getSuit().equals( CardSuit.CLUBS ) ) {
 			twoEyeJacks--;
 			System.out.println( "Play Two-Eye Jack as wild for: " + card );
 		} else {
@@ -34,8 +36,7 @@ public class Deck {
 			if( PLAYED_CARDS.get( card ) == 0 ) 
 				throw new Exception( "Cannot remove unplayed card: " + card );
 			
-			if( REMOVED_CARDS.get( card ) == null )
-				REMOVED_CARDS.put( card, 0 );
+			if( REMOVED_CARDS.get( card ) == null ) REMOVED_CARDS.put( card, 0 );
 			
 			REMOVED_CARDS.put( card, REMOVED_CARDS.get( card ) + 1 );
 		}

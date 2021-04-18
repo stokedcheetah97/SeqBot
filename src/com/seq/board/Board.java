@@ -9,32 +9,24 @@ public class Board {
 	public static Set<Square> getOpenSquares() {
 		Set<Square> squares = new TreeSet<>();
 		for( Card card: Hand.get() )
-			squares.addAll( getOpenSquares( card ) );
-		return squares;
-	}
-	
-	private static Set<Square> getOpenSquares( Card card ) {
-		Set<Square> squares = new TreeSet<>();
-		if( !card.getRank().equals( CardRank.CARD_J ) )
-			for( int i=1; i<101; i++ )
-				if( getSquare(i) != null && StringUtils.isBlank(getSquare(i).getColor()) && getSquare(i).getCard().equals( card ) ) 
-					squares.add( getSquare(i) );
+			if( !card.getRank().equals( CardRank.CARD_J ) )
+				squares.addAll( getOpenSquares( card ) );
 		return squares;
 	}
 
-	public static void addToken( int positionNumber, String color ) {
-		TOKENS.add( new Square( positionNumber, color ) );
+	public static void addToken( int pos, String color ) {
+		TOKENS.add( new Square( pos, color ) );
 	}
 	
-	public static Square getSquare( int positionNumber ) {
-		if( positionNumber < 1 || positionNumber > 100 ) return null;
+	public static Square getSquare( int pos ) {
+		if( pos < 1 || pos > 100 ) return null;
 		for( Square t: TOKENS )
-			if( t.getPos() == positionNumber ) return t;
-		return new Square( positionNumber, "" );
+			if( t.getPos() == pos ) return t;
+		return new Square( pos, "" );
 	}
 	
-	public static void removeToken( int positionNumber, String color ) {
-		TOKENS.add( new Square( positionNumber, color ) );
+	public static void removeToken( int pos ) {
+		TOKENS.remove( getSquare( pos ) );
 	}
 
 	public static Card [] [] getCardMatrix() {
@@ -151,6 +143,14 @@ public class Board {
 			CARD_MATRIX [9] [9] = new Card( CardSuit.WILD, CardRank.WILD );
 		}
 		return CARD_MATRIX;
+	}
+	
+	private static Set<Square> getOpenSquares( Card card ) {
+		Set<Square> squares = new TreeSet<>();
+		for( int i=1; i<101; i++ )
+			if( getSquare(i) != null && StringUtils.isBlank(getSquare(i).getColor()) && getSquare(i).getCard().equals( card ) ) 
+				squares.add( getSquare(i) );
+		return squares;
 	}
 
 	private static Card [] [] CARD_MATRIX = null;	

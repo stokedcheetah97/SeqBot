@@ -31,7 +31,6 @@ public class SeqBot {
 				if( NEXT_MOVE != null && NEXT_MOVE.equals( MY_MOVE ) ) throw new Exception( "Silly human - SeqBot must place a token!" );
 				if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) throw new Exception( "Silly human - our opponent must place a token!" );
 				if( myNewCard == null ) throw new Exception( "Silly human - tell me what card to draw!" );
-				
 				Hand.addCard( myNewCard );
 				NEXT_MOVE = OPPNENTS_MOVE;
 			} catch( Exception ex ) {
@@ -46,10 +45,7 @@ public class SeqBot {
 				if( opponentPos < 1 || opponentPos > 100   ) throw new Exception( "Silly human - valid positions range from 2 - 99!" );
 
 				Board.addToken( opponentPos, opponentTokenColor );
-				if( StringUtils.isEmpty( opponentJackSuit ) ) 
-					Deck.playCard( Board.getSquare( opponentPos ).getCard() );
-				else
-					Deck.playJack(Board.getSquare( opponentPos ).getCard(), opponentJackSuit );
+				Deck.playCard( Board.getSquare( opponentPos ).getCard() );
 				NEXT_MOVE = MY_MOVE;
 			} catch( Exception ex) {
 				logError( ex, "Failed to play " + opponentTokenColor + " token on " + Board.getSquare( opponentPos ).getCard() + " @pos: " + opponentPos );
@@ -64,10 +60,20 @@ public class SeqBot {
 				Hand.clearAxisRanges();
 				myNextMove = new ArrayList<>( MoveCalculator.get().keySet() );
 				Collections.sort( myNextMove );	
-				Card card = Board.getSquare( myNextMove.get(0) ).getCard();
-				Hand.removeCard( card );
+				Square playSquare = Board.getSquare( myNextMove.get(0) );
+				Card card = playSquare.getCard();
+				if( playSquare.getColor() != null && playSquare.getColor().equals( opponentTokenColor ) 
+							&& !Hand.get().contains( playSquare.getCard() ) && Hand.getOneEyeJacks().size() > 0 ) {
+					card = Hand.getOneEyeJacks().iterator().next();
+					Board.addToken( myNextMove.get(0), myTokenColor );
+				} else if( !Hand.get().contains( card ) && Hand.getTwoEyeJacks().size() > 0 ) {
+					card = Hand.getTwoEyeJacks().iterator().next();
+					Board.removeToken( playSquare.getPos() );
+				} else 
+					Board.addToken( myNextMove.get(0), myTokenColor );
+
 				Deck.playCard( card );
-				Board.addToken( myNextMove.get(0), myTokenColor );
+				Hand.removeCard( card );
 				NEXT_MOVE = DRAW_CARD;
 			} catch( Exception ex) {
 				logError( ex, "Failed to calculate move" );

@@ -9,13 +9,20 @@ import com.seq.cards.*;
 public class MoveCalculator {
 	
 	public static Map<Integer, Double> get() throws Exception {
-		
 		Map<Integer, Double> map = new HashMap<>();
 		List<Square> bestSquares = new ArrayList<>();
 		double bestScore = 0.0;
 		RangeUtil.populateRanges();
+		
+		if( RangeUtil.getSeqBlocker() != null ) {
+			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
+			return map;
+		} else if( RangeUtil.getSeqFinisher() != null ) {
+			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
+			return map;
+		}
+	
 		for( Square square: Hand.getAxisRanges().keySet() ) {
-
 			System.out.println( "Calculating scores for: " + square );
 			Map<Integer, Set<Square>> axisRanges = Hand.getAxisRanges().get( square );
 			double score = 0.0;
@@ -73,7 +80,7 @@ public class MoveCalculator {
 			if( Hand.get().contains(square.getCard()) && ( !countedCards.contains(square.getCard()) || Hand.countInstancesofCardInHand(square.getCard()) > 1 ) )
 				countedCards.add( square.getCard() );
 
-		int numCardsNeeded = counts.size() - Hand.countTwoEyeJacks() - countedCards.size();
+		int numCardsNeeded = counts.size() - Hand.getTwoEyeJacks().size() - countedCards.size();
 		return numCardsNeeded < 1;		
 	}
 	
