@@ -1,94 +1,73 @@
 package com.seq.board;
 
-import java.util.*;
-
+import org.apache.commons.lang3.StringUtils;
 import com.seq.*;
 import com.seq.cards.*;
 
 public class Square implements Comparable<Square> {
 
-	public Square( int positionNumber, String color ) {
-		this.row = ( positionNumber - 1 ) / 10;
-		this.col = ( positionNumber - 1 ) % 10;
-		this.positionNumber = positionNumber;
+	public Square( int pos, String color ) {
+		this.pos = pos;
 		this.color = color == null ? "" : color;
+	}
+
+	public boolean isWild() {
+		return Board.getSquare( pos ).getCard().equals( new Card(CardSuit.WILD, CardRank.WILD) );
 	}
 	
 	public Card getCard() {
-		return Board.get().getCardMatrix()[this.row][this.col];
+		return Board.getCardMatrix()[getRow()][getCol()];
 	}
 	
 	public static boolean isOpponents( Square square ) {
-		return square != null && !square.color.isEmpty() && !square.color.equals( SeqBot.get().getMyTokenColor() );
+		return square != null && StringUtils.isNotBlank( square.color ) && !square.color.equals( SeqBot.get().getMyTokenColor() );
 	}
 	
-	public void addToMyRange( Collection<Square> squares ) {
-		this.myRange.addAll( squares );
-	}
-	
-	public void addToOpponentRange( Collection<Square> squares ) {
-		this.opponentRange.addAll( squares );
-	}
-	
-	public Set<Square> getMyRange() {
-		return this.myRange;
-	}
-
-	public Set<Square> getOpponentRange() {
-		return this.opponentRange;
-	}
-	
-	public Map<Integer, Set<Square>> getMyAxisRanges() {
-		return myAxisRanges;
-	}
-
-	public Integer getPositionNumber() {
-		return positionNumber;
-	}
-
-	public void setPositionNumber(Integer positionNumber) {
-		this.positionNumber = positionNumber;
-	}
-
-	public int getRow() {
-		return row;
-	}
-
-	public void setRow(int row) {
-		this.row = row;
-	}
-
-	public int getCol() {
-		return col;
-	}
-
-	public void setCol(int col) {
-		this.col = col;
+	public Integer getPos() {
+		return pos;
 	}
 
 	public String getColor() {
 		return color;
 	}
 
-	public void setColor(String color) {
-		this.color = color;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ( ( pos == null ) ? 0: pos.hashCode() );
+		return result;
+	}
+
+	@Override
+	public boolean equals( Object obj ) {
+		if( this == obj ) return true;
+		if( !( obj instanceof Square ) ) return false;
+		Square other = (Square) obj;
+		if( pos == null ) {
+			if( other.pos != null ) return false;
+		} else if( !pos.equals( other.pos ) ) return false;
+		return true;
 	}
 
 	@Override
 	public int compareTo( Square o ) {
-		return o.positionNumber.compareTo( this.positionNumber );
+		return o.pos.compareTo( pos );
 	}
 	
 	@Override
 	public String toString() {
-		return "[" + getCard().toString() + "=" + this.color + "]";
+		return getCard() + "@" + pos + (StringUtils.isNotBlank(color) ? "=" + color : "");
 	}
 	
-	private Integer positionNumber;
-	private int row;
-	private int col;
+	private int getRow() {
+		return ( pos - 1 ) / 10;
+	}
+	
+	private int getCol() {
+		return ( pos - 1 ) % 10;
+	}
+	
+	private Integer pos;
 	private String color;
-	private Map<Integer, Set<Square>> myAxisRanges = new HashMap<>();
-	private Set<Square> myRange = new TreeSet<>();
-	private Set<Square> opponentRange = new TreeSet<>();
 }

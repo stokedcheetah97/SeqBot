@@ -1,6 +1,7 @@
 package com.seq.cards;
 
 import java.util.*;
+import com.seq.SeqBot;
 
 /**
  * There are 96 board cards + 8 Jacks = 104 initial deck size
@@ -9,7 +10,7 @@ import java.util.*;
 public class Deck {
 	
 	public static int countAvailableCards( Card card ) {
-		return PLAYED_CARDS.get( card ) == null ? 0 : PLAYED_CARDS.get( card );
+		return PLAYED_CARDS.get( card ) == null ? 2 : 2 - PLAYED_CARDS.get( card ) - SeqBot.NUM_CARDS;
 	}
 	
 	public static void playCard( Card card )  throws Exception {

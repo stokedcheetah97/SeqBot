@@ -151,9 +151,10 @@ public class PanelBuilder {
 					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
 					GuiController.processRequest();
 					if( SeqBot.get().getErrMsg() == null ) {
-						String msg = "Play " + SeqBot.get().getMyTokenColor() + " token on " + Board.get().getSquare( SeqBot.get().getMyNextMove().get(0) ).getCard() + " @Pos # " + SeqBot.get().getMyNextMove().get(0);
+						String msg = "Play " + SeqBot.get().getMyTokenColor() + " token on " + Board.getSquare( SeqBot.get().getMyNextMove().get(0) ).getCard() + " @Pos # " + SeqBot.get().getMyNextMove().get(0);
 						if( SeqBot.get().getMyNextMove().size() > 1 ) 
 							 msg = "SeqBot found " + SeqBot.get().getMyNextMove().size() + " equal moves: " + SeqBot.get().getMyNextMove() + "\n\n" + msg;
+						System.out.println( msg );
 						GuiController.showInfo(  msg );
 					} else
 						GuiController.showError( SeqBot.get().getErrMsg() );
@@ -182,7 +183,7 @@ public class PanelBuilder {
 						SeqBot.get().setMyNewCard( new Card( CardSuit.SUIT_CODES[cardSuitIndex], cardRank ) );
 						GuiController.processRequest();
 						if( SeqBot.get().getErrMsg() == null )
-							GuiController.showInfo( "Add " + SeqBot.get().getMyNewCard() + " to hand." );
+							System.out.println( "Add " + SeqBot.get().getMyNewCard() + " to hand" );
 						else
 							GuiController.showError( SeqBot.get().getErrMsg() );
 						SeqBot.get().setStatusMsg("Hand [ " + Hand.get() + " ]");
@@ -190,7 +191,7 @@ public class PanelBuilder {
 						System.out.println( "Register opponents move" );
 						GuiController.processRequest();
 						if( SeqBot.get().getErrMsg() == null )
-							GuiController.showInfo( "Played " + SeqBot.get().getOpponentTokenColor() + " token for " + Board.get().getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos # " + SeqBot.get().getOpponentPos() );
+							GuiController.showInfo( "Played " + SeqBot.get().getOpponentTokenColor() + " token for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos # " + SeqBot.get().getOpponentPos() );
 						else
 							GuiController.showError( SeqBot.get().getErrMsg() );
 					}

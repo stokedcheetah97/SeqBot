@@ -53,8 +53,8 @@ public class GuiController extends JFrame {
 
 	public static void processRequest() {
 		try{
-			new Thread( SeqBot.get() ).start();
-        	Thread.sleep( 250 );
+			SeqBot.get().processRequest();
+        	//Thread.sleep( 250 );
         } catch(Exception ex){ ex.printStackTrace(); }
 	}
 	

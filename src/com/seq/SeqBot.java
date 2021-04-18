@@ -1,71 +1,85 @@
 package com.seq;
 
 import java.util.*;
-import javax.swing.*;
-
+import org.apache.commons.lang3.StringUtils;
 import com.seq.board.*;
 import com.seq.cards.*;
 import com.seq.gui.*;
 import com.seq.util.*;
 
-public class SeqBot implements Runnable {
-	
+public class SeqBot {
 	
 	public static final int NUM_CARDS = 7;
 	public static final boolean MOCK_HAND = true;
-
+	
 	public static void main( String[] args ) {
 		System.out.println( "SeqBot loading..." );
 		GuiController.get();
-		System.out.println( "SeqBot is now self-aware" );
+		System.out.println( "SeqBot has become self-aware" );
 		if( MOCK_HAND ) mockHand();
 		
-		SwingUtilities.invokeLater( new Runnable() {
-			@Override
-			public void run() {
-				GuiController.get().init();
-				if( MOCK_HAND ) {
-					get().setStatusMsg( "  My Hand:                    " + Hand.get() );
-					GuiController.get().refresh();
-				}
-			}
-		} );
+		GuiController.get().init();
+		if( MOCK_HAND ) {
+			get().setStatusMsg( "  My Hand:                    " + Hand.get() );
+			GuiController.get().refresh();
+		}
 	}
-
-
-	@Override
-	public void run() {
+	
+	public void processRequest() {
 		if( isDrawCard() ) 
 			try {
-				System.out.println( "SeqBot drew card: " + myNewCard );
+				if( NEXT_MOVE != null && NEXT_MOVE.equals( MY_MOVE ) ) throw new Exception( "Silly human - SeqBot must place a token!" );
+				if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) throw new Exception( "Silly human - our opponent must place a token!" );
+				if( myNewCard == null ) throw new Exception( "Silly human - tell me what card to draw!" );
+				
 				Hand.addCard( myNewCard );
+				NEXT_MOVE = OPPNENTS_MOVE;
 			} catch( Exception ex ) {
 				logError( ex, "Failed to add card to hand" );
 			}
 		else if( isPlaceOpponentToken() ) 
 			try {
-				Board.get().addToken( opponentPos, opponentTokenColor );
-				if( opponentJackSuit.isEmpty() ) 
-					Deck.playCard( Board.get().getSquare( opponentPos ).getCard() );
+				if( NEXT_MOVE != null &&  NEXT_MOVE.equals( DRAW_CARD ) ) throw new Exception( "Silly human - SeqBot must draw a card!" );
+				if( NEXT_MOVE != null &&  NEXT_MOVE.equals( MY_MOVE ) ) throw new Exception( "Silly human - SeqBot must place a token!" );
+				if( opponentPos == null ) throw new Exception( "Silly human - tell me where our opponent moved!" );
+				if( opponentPos == 1 || opponentPos == 10 || opponentPos == 90 || opponentPos == 100  ) throw new Exception( "Silly human - cannot play on wilcard corner squares!" );
+				if( opponentPos < 1 || opponentPos > 100   ) throw new Exception( "Silly human - valid positions range from 2 - 99!" );
+
+				Board.addToken( opponentPos, opponentTokenColor );
+				if( StringUtils.isEmpty( opponentJackSuit ) ) 
+					Deck.playCard( Board.getSquare( opponentPos ).getCard() );
 				else
-					Deck.playJack(Board.get().getSquare( opponentPos ).getCard(), opponentJackSuit );
+					Deck.playJack(Board.getSquare( opponentPos ).getCard(), opponentJackSuit );
+				NEXT_MOVE = MY_MOVE;
 			} catch( Exception ex) {
-				logError( ex, "Failed to play " + opponentTokenColor + " token on " + Board.get().getSquare( opponentPos ).getCard() + " @pos: " + opponentPos );
+				logError( ex, "Failed to play " + opponentTokenColor + " token on " + Board.getSquare( opponentPos ).getCard() + " @pos: " + opponentPos );
 			}
 		else if( isCalculateMove() )
 			try {
+				if( NEXT_MOVE != null && NEXT_MOVE.equals( DRAW_CARD ) ) throw new Exception( "Silly human - SeqBot must draw a card!" );
+				if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) throw new Exception( "Silly human - our opponent must place a token!" );
+				
 				System.out.println( "SeqBot calculating next move... " );
 				if( Hand.get().size() != NUM_CARDS ) throw new Exception( "Must have " + NUM_CARDS + " in hand" );
+				Hand.clearAxisRanges();
 				myNextMove = new ArrayList<>( MoveCalculator.get().keySet() );
 				Collections.sort( myNextMove );	
-				Card card = Board.get().getSquare( myNextMove.get(0) ).getCard();
+				Card card = Board.getSquare( myNextMove.get(0) ).getCard();
 				Hand.removeCard( card );
 				Deck.playCard( card );
-				Board.get().addToken( myNextMove.get(0), myTokenColor );
+				Board.addToken( myNextMove.get(0), myTokenColor );
+				NEXT_MOVE = DRAW_CARD;
 			} catch( Exception ex) {
 				logError( ex, "Failed to calculate move" );
 			}
-		else logError( new Exception( "Invalid state" ), "SeqBot is confused" );
+		else if( NEXT_MOVE != null && NEXT_MOVE.equals( DRAW_CARD ) ) 
+			logError( new Exception( "Silly human - SeqBot must draw a card!" ), "SeqBot is confused" );
+		else if( NEXT_MOVE != null && NEXT_MOVE.equals( MY_MOVE ) ) 
+			logError( new Exception( "Silly human - SeqBot must place a token!" ), "SeqBot is confused" );
+		else if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) 
+			logError( new Exception( "Silly human - our opponent must place a token!" ), "SeqBot is confused" );
+		else 
+			logError( new Exception( "Invalid state" ), "SeqBot is confused" );
 	}
 	
 	public static SeqBot get() {
@@ -73,32 +87,20 @@ public class SeqBot implements Runnable {
 		return seqBot;
 	}
 
-	
-	
-//	private Map<Square, Set<Set<Square>>> getSequenceSets( Square square ) {
-//		Set<Square> squares = new TreeSet<>();
-//		
-//		Set<Set<Square>> seqSet = new TreeSet<>();
-//		seqSet.add( squares );
-//		Map<Square, Set<Set<Square>>> map = new HashMap<>();
-//		map.put( square, seqSet );
-//		return map;
-//	}
-
 	private boolean isDrawCard() {
-		return myNewCard != null && !myNewCard.getRank().isEmpty() && !myNewCard.getSuit().isEmpty();
+		return myNewCard != null && StringUtils.isNotEmpty( myNewCard.getRank() ) && StringUtils.isNotEmpty( myNewCard.getSuit() );
 	}
 	
 	private boolean isPlaceOpponentToken() {
-		return !isDrawCard() && !opponentTokenColor.isEmpty() && opponentPos != null;
+		return !isDrawCard() && StringUtils.isNotEmpty( opponentTokenColor ) && opponentPos != null;
 	}
 	
 	private boolean isCalculateMove() {
-		return !isDrawCard() && !isPlaceOpponentToken() && calcNextMove && !myTokenColor.isEmpty();
+		return !isDrawCard() && !isPlaceOpponentToken() && calcNextMove && StringUtils.isNotEmpty( myTokenColor );
 	}
 	
 	private void logError( Exception ex, String msg ) {
-		errMsg = msg + " - " + ex.getMessage();
+		errMsg = ( ex.getMessage().startsWith( "Silly human" ) ? "" : msg  + " - " ) + ex.getMessage();
 		System.out.println( msg );
 		report( "Error-State Report" );
 		ex.printStackTrace();
@@ -112,7 +114,6 @@ public class SeqBot implements Runnable {
 		System.out.println( "calcNextMove: " + calcNextMove );
 		System.out.println( "myNewCard: " + myNewCard );
 		System.out.println( "myNextMove: " + myNextMove );
-		
 		System.out.println( "opponentJackSuit: " + opponentJackSuit );
 		System.out.println( "opponentPos: " + opponentPos );
 	}
@@ -120,29 +121,22 @@ public class SeqBot implements Runnable {
 	private static void mockHand() {
 		try {
 			Hand.addCard( new Card(CardSuit.SPADES, CardRank.CARD_2) );
-			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_3) );
-			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_Q) );
+			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_7) );
+			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_2) );
 			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_5) );
 			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_6) );
-			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_K) );
+			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_2) );
 			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_J) );
 			
 			SeqBot.get().setMyTokenColor( TokenColor.BLUE );
 			SeqBot.get().setOpponentTokenColor( TokenColor.RED );
-			
-			//GuiController.get().getMyColorPicklist().setSelectedItem( TokenColor.BLUE );
-			//GuiController.get().getOpponentColorPicklist().setSelectedItem( TokenColor.RED );
-			
+
 			System.out.println( "SeqBot loaded mock hand" );
 		} catch( Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 	
-	public boolean isCalcNextMove() {
-		return calcNextMove;
-	}
-
 	public void setCalcNextMove(boolean calcNextMove) {
 		this.calcNextMove = calcNextMove;
 	}
@@ -198,11 +192,7 @@ public class SeqBot implements Runnable {
 	public String getErrMsg() {
 		return errMsg;
 	}
-
-	public void setErrMsg(String errMsg) {
-		this.errMsg = errMsg;
-	}
-
+	
 	public String getStatusMsg() {
 		return statusMsg;
 	}
@@ -212,6 +202,10 @@ public class SeqBot implements Runnable {
 	}
 
 	private static SeqBot seqBot = null;
+	private static final String MY_MOVE = "MY_MOVE";
+	private static final String DRAW_CARD = "DRAW_CARD";
+	private static final String OPPNENTS_MOVE = "OPPNENTS_MOVE";
+	private static String NEXT_MOVE = null;
 	boolean calcNextMove = false;
 	private Card myNewCard = null;
 	private List<Integer> myNextMove = null;
