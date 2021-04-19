@@ -20,6 +20,8 @@ public class MoveCalculator {
 			map.put( RangeUtil.getGameFinisher().getPos(), 1.0 );
 		else if( RangeUtil.getSeqFinisher() != null && SeqBot.MY_SEQ_COUNT == 1 ) 
 			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
+		else if( RangeUtil.getOneEyeJackTarget() != null && SeqBot.OPPONENT_SEQ_COUNT == 1 )
+			map.put( RangeUtil.getOneEyeJackTarget().getPos(), 1.0 );
 		else if( RangeUtil.getGameBlocker() != null )
 			map.put( RangeUtil.getGameBlocker().getPos(), 1.0 );
 		else if( RangeUtil.getSeqBlocker() != null && SeqBot.OPPONENT_SEQ_COUNT == 1 ) 
@@ -27,14 +29,15 @@ public class MoveCalculator {
 		else if( RangeUtil.getSeqFinisher() != null ) {
 			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
 			SeqBot.MY_SEQ_COUNT++;
-		} else if( RangeUtil.getSeqBlocker() != null ) {
+		} else if( RangeUtil.getOneEyeJackTarget() != null )
+			map.put( RangeUtil.getOneEyeJackTarget().getPos(), 1.0 );
+		else if( RangeUtil.getSeqBlocker() != null )
 			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
-			SeqBot.OPPONENT_SEQ_COUNT++;
-		}
+	
 		if( !map.isEmpty() ) return map;
 	
 		for( Square square: Hand.getAxisRanges().keySet() ) {
-			double score = getScore( square, Hand.getAxisRanges().get( square ), SeqBot.get().getMyTokenColor() );
+			double score = getScore( Hand.getAxisRanges().get( square ), SeqBot.get().getMyTokenColor() );
 			if( score > 0 ) {
 				System.out.println( "Score [ " + square +" ] = " + score );
 				if( score == bestScore )
@@ -47,7 +50,7 @@ public class MoveCalculator {
 				}  
 			}
 		}
-		
+	
 		if( bestSquares.isEmpty() ) throw new Exception( "Failed to identify best square in range" );
 
 		List<Integer> positions = bestSquares.stream().map(s -> s.getPos()).collect(Collectors.toList());
@@ -55,13 +58,11 @@ public class MoveCalculator {
 			map.put(i, bestScore);
 			System.out.println( "Final Best Score [ " + Board.getSquare(i) +" ] = " + bestScore );
 		}
-
 		return map;
 	}
 	
 	
-	public static double getScore( Square square, Map<Integer, Set<Square>> axisRanges, String color ) throws Exception {
-		System.out.println( "Calculating scores for: " + square );
+	public static double getScore( Map<Integer, Set<Square>> axisRanges, String color ) throws Exception {
 		double score = 0.0;
 		for( Integer axis: axisRanges.keySet() ) {
 			if( axisRanges.get( axis ) == null ) continue;
@@ -105,7 +106,22 @@ public class MoveCalculator {
 	}
 	
 	private static double calcOpponent( Map<Square, Integer> counts, int numWild, int deckSize ) throws Exception {
-		return 0.0;
+		if( counts == null || counts.isEmpty() ) throw new Exception( "Counts should never be null in calcOpponent()" );
+		Square square = counts.keySet().iterator().next();
+		double numCards = new Double( counts.get( square ) );
+		double dDeckSize = new Double( deckSize );
+		double dNumWild = new Double( numWild );
+		double naturalProb = (numCards/dDeckSize);
+		double wildProb = (dNumWild/dDeckSize);
+		counts.remove( square );
+		Map<Square, Integer> copyCounts1 = updateCounts( counts, square.getCard() );
+		Map<Square, Integer> copyCounts2 = updateCounts( counts, square.getCard() );
+
+		if( counts.size() > 0 ) {
+			naturalProb = naturalProb * calcOpponent( copyCounts1, numWild, deckSize - 1 );
+			wildProb = wildProb * calcOpponent( copyCounts2, numWild > 0 ? numWild - 1 : 0, deckSize - 1 );
+		}
+		return naturalProb + wildProb;
 	}
 	
 	private static double calc( Map<Square, Integer> counts, int numWild, int deckSize ) throws Exception {

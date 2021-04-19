@@ -36,6 +36,10 @@ public class RangeUtil {
 		return oneEyeJackTarget;
 	}
 	
+	public static Square getTwoEyeJackTarget() {
+		return twoEyeJackTarget;
+	}
+	
 	public static Square getSeqFinisher() {
 		return seqFinisher;
 	}
@@ -53,13 +57,39 @@ public class RangeUtil {
 	}
 	
 	private static Square getBestOneEyeJackTarget() throws Exception {
-		
 		Square target = getBestTwoEyeJackTarget( SeqBot.get().getOpponentTokenColor() );
+		Map<Integer, Set<Square>> axisRanges = getOpponentAxisRange( target );
+		double currentScore = MoveCalculator.getScore( axisRanges, SeqBot.get().getOpponentTokenColor() );
 		
+		Square bestTarget = null;
+		double worstAlternateScore = currentScore;
+		
+		Set<Square> oppSquares = new TreeSet<>();
+		for( Integer axis : axisRanges.keySet() )
+			for( Square square: axisRanges.get(axis) )
+				if( Square.isOpponents( square ) ) oppSquares.add( square );
+		
+		
+		for( Square square: oppSquares ) {
+			square.setColor( "" );
+			Map<Integer, Set<Square>> altAxisRanges = new HashMap<>();
+			for( Integer axis : axisRanges.keySet() ) {
+				Set<Square> tmp = new TreeSet<>( axisRanges.get(axis) );
+				tmp.remove( square );
+				tmp.add( square );
+				altAxisRanges.put( axis, tmp );
+			}
+			double alternateScore = MoveCalculator.getScore( altAxisRanges, SeqBot.get().getOpponentTokenColor() );
+			if( alternateScore < worstAlternateScore ) {
+				worstAlternateScore = alternateScore;
+				bestTarget = square;
+				System.out.println( "New worse Score [ " + square + " ] = " + worstAlternateScore );
+			}
+		}
 
-		return target;
+		return bestTarget;
 	}
-
+		
 	private static Square getBestTwoEyeJackTarget( String color ) throws Exception {
 		Set<Square> targets = new HashSet<>();
 		for( int i=2; i<100; i++ ) 
@@ -71,7 +101,7 @@ public class RangeUtil {
 			if( bestTarget == null ) bestTarget = square;
 			else {
 				Map<Integer, Set<Square>> range = color.equals( SeqBot.get().getMyTokenColor() ) ? Hand.getAxisRanges().get( square ) : getOpponentAxisRange( square );
-				double score = MoveCalculator.getScore(square, range, color);
+				double score = MoveCalculator.getScore( range, color );
 				if( score > bestScore ) {
 					bestScore = score;
 					bestTarget = square;
@@ -88,17 +118,15 @@ public class RangeUtil {
 			Square[] axisSquares = getAxisSquares( square, axis );
 			if( axisSquares != null ) {
 				List<Square> squares = new ArrayList<>( Arrays.asList( axisSquares ) );
-				Collections.sort(squares);
 				Set<Square> range = new HashSet<>();
 				for( int i=0; i<squares.size(); i++ )
 					if( squares.get(i) == null || Square.isMine(squares.get(i)) ) {
-						if( range.size() > 4 ) {
-							map.put( axis, range );
-							break;
-						}
-						else range.clear();
+						if( range.size() > 4 ) break;
+						range.clear();
 					}
 					else range.add( squares.get(i) );
+				
+				if( range.size() > 4 ) map.put( axis, range );
 			}
 		}
 		return map;
@@ -114,12 +142,11 @@ public class RangeUtil {
 			Square[] axisSquares = getAxisSquares( square, axis );
 			if( axisSquares != null ) {
 				List<Square> squares = new ArrayList<>( Arrays.asList( axisSquares ) );
-				Collections.sort(squares);
 				int seqSize = 0;
 				while( squares.size() > 4 ) {	
 					List<Square> potentialSequence = squares.subList( 0, 5 );
 					for( Square s: potentialSequence )
-						if( s.getColor().equals( color ) ) seqSize++;
+						if( s != null && s.getColor().equals( color ) ) seqSize++;
 					squares.remove( 0 );
 				}
 				if( seqSize == 4 ) potentialSeqs++;

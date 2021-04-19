@@ -10,7 +10,7 @@ import com.seq.util.*;
 public class SeqBot {
 	
 	public static final int NUM_CARDS = 7;
-	public static final boolean MOCK_HAND = true;
+	public static final boolean MOCK_HAND = false;
 	
 	public static void main( String[] args ) {
 		System.out.println( "SeqBot loading..." );
@@ -32,7 +32,9 @@ public class SeqBot {
 				if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) throw new Exception( "Silly human - our opponent must place a token!" );
 				if( myNewCard == null ) throw new Exception( "Silly human - tell me what card to draw!" );
 				Hand.addCard( myNewCard );
-				NEXT_MOVE = OPPNENTS_MOVE;
+				
+				if( Hand.get().size() == NUM_CARDS)
+					NEXT_MOVE = OPPNENTS_MOVE;
 			} catch( Exception ex ) {
 				logError( ex, "Failed to add card to hand" );
 			}
