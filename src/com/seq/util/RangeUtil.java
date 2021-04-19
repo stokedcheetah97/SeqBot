@@ -1,27 +1,39 @@
 package com.seq.util;
 
 import java.util.*;
+
 import org.apache.commons.lang3.StringUtils;
-import com.seq.SeqBot;
+
+import com.seq.*;
 import com.seq.board.*;
-import com.seq.cards.Hand;
+import com.seq.cards.*;
 
 public class RangeUtil {
 
-	public static void populateRanges() {
+	public static void populateRanges() throws Exception {
 		seqBlocker = null;
 		seqFinisher = null;
+		gameFinisher = null;
+		gameBlocker = null;
+		oneEyeJackTarget = null;
+		twoEyeJackTarget = null;
 		
 		if( Hand.getTwoEyeJacks().size() > 0 ) {
-			Set<Square> seqFinishers = getSeqFinishers();
+			seqFinisher = getBestTwoEyeJackTarget( SeqBot.get().getMyTokenColor() );
+			seqBlocker = getBestTwoEyeJackTarget( SeqBot.get().getOpponentTokenColor() );
 		}
 		
+		if( Hand.getOneEyeJacks().size() > 0 )
+			oneEyeJackTarget = getBestOneEyeJackTarget();
 		
-		Set<Square> seqBlockers = getSeqBlockers();
-		if( seqFinisher == null && seqBlocker == null)
+		if( seqFinisher == null && seqBlocker == null && oneEyeJackTarget == null )
 			for( Square square: Board.getOpenSquares() ) 
 				for( int axis: AXIS_DIRECTIONS )
 					setAxisRange( square, axis, getAxisSquares( square, axis ) );
+	}
+	
+	public static Square getOneEyeJackTarget() {
+		return oneEyeJackTarget;
 	}
 	
 	public static Square getSeqFinisher() {
@@ -31,29 +43,96 @@ public class RangeUtil {
 	public static Square getSeqBlocker() {
 		return seqBlocker;
 	}
-
-	private static Set<Square> getSeqFinishers() {
-		Set<Square> finishers = new HashSet<>();
-		for( int i=2; i<100; i++ )
-			if( isPotentialSequence(i, SeqBot.get().getMyTokenColor() ) ) {
-				
-			} else if( isPotentialSequence(i, SeqBot.get().getOpponentTokenColor() ) ) {
+	
+	public static Square getGameFinisher() {
+		return gameFinisher;
+	}
+	
+	public static Square getGameBlocker() {
+		return gameBlocker;
+	}
+	
+	private static Square getBestOneEyeJackTarget() throws Exception {
 		
-			}
-				//if( getSquare(i) != null && StringUtils.isBlank(getSquare(i).getColor()) && getSquare(i).getCard().equals( card ) ) 
-				//finishers.add( getSquare(i) );
-		return finishers;
-	}
-	
-	private static boolean isPotentialSequence(Integer i, String color) {
-		return false;
-	}
-	
-	private static Set<Square> getSeqBlockers() {
-		Set<Square> blockers = new HashSet<>();
-		return blockers;
+		Square target = getBestTwoEyeJackTarget( SeqBot.get().getOpponentTokenColor() );
+		
+
+		return target;
 	}
 
+	private static Square getBestTwoEyeJackTarget( String color ) throws Exception {
+		Set<Square> targets = new HashSet<>();
+		for( int i=2; i<100; i++ ) 
+			if( isPotentialSequence( Board.getSquare(i), color ) ) targets.add(Board.getSquare(i));
+		
+		Square bestTarget = null;
+		double bestScore = 0.0;
+		for( Square square: targets ) 
+			if( bestTarget == null ) bestTarget = square;
+			else {
+				Map<Integer, Set<Square>> range = color.equals( SeqBot.get().getMyTokenColor() ) ? Hand.getAxisRanges().get( square ) : getOpponentAxisRange( square );
+				double score = MoveCalculator.getScore(square, range, color);
+				if( score > bestScore ) {
+					bestScore = score;
+					bestTarget = square;
+				}
+			}
+
+		return bestTarget;
+	}
+
+	private static Map<Integer, Set<Square>> getOpponentAxisRange( Square square ) {
+		Map<Integer, Set<Square>> map = new HashMap<>();
+		
+		for( int axis: AXIS_DIRECTIONS ) {
+			Square[] axisSquares = getAxisSquares( square, axis );
+			if( axisSquares != null ) {
+				List<Square> squares = new ArrayList<>( Arrays.asList( axisSquares ) );
+				Collections.sort(squares);
+				Set<Square> range = new HashSet<>();
+				for( int i=0; i<squares.size(); i++ )
+					if( squares.get(i) == null || Square.isMine(squares.get(i)) ) {
+						if( range.size() > 4 ) {
+							map.put( axis, range );
+							break;
+						}
+						else range.clear();
+					}
+					else range.add( squares.get(i) );
+			}
+		}
+		return map;
+	}
+
+	private static boolean isPotentialSequence( Square square, String color) {
+		
+		if( StringUtils.isNotBlank(square.getColor()) ) return false;
+
+		int mostPotentialSeqs = 0;
+		for( int axis: AXIS_DIRECTIONS ) {
+			int potentialSeqs = 0;
+			Square[] axisSquares = getAxisSquares( square, axis );
+			if( axisSquares != null ) {
+				List<Square> squares = new ArrayList<>( Arrays.asList( axisSquares ) );
+				Collections.sort(squares);
+				int seqSize = 0;
+				while( squares.size() > 4 ) {	
+					List<Square> potentialSequence = squares.subList( 0, 5 );
+					for( Square s: potentialSequence )
+						if( s.getColor().equals( color ) ) seqSize++;
+					squares.remove( 0 );
+				}
+				if( seqSize == 4 ) potentialSeqs++;
+			}
+			if( potentialSeqs > 1 && potentialSeqs > mostPotentialSeqs && color.equals( SeqBot.get().getMyTokenColor() ) )
+				gameFinisher = square;
+			else if( potentialSeqs > 1 && potentialSeqs > mostPotentialSeqs && color.equals( SeqBot.get().getOpponentTokenColor() ) )
+				gameBlocker = square;
+			if( potentialSeqs > 1 && potentialSeqs > mostPotentialSeqs ) mostPotentialSeqs = potentialSeqs;
+			
+		}
+		return mostPotentialSeqs > 0;
+	}
 
 	private static void setAxisRange( Square square, Integer axis, Square[] squares ) {
 		Set<Square> range = new TreeSet<>();
@@ -85,6 +164,10 @@ public class RangeUtil {
 		return axis == NORTH_SOUTH ? 10 : axis == WEST_EAST ? 1 : axis == NW_SE ? 11 : axis == NE_SW ? 9 : -1;
 	}
 	
+	private static Square oneEyeJackTarget = null;
+	private static Square twoEyeJackTarget = null;
+	private static Square gameFinisher = null;
+	private static Square gameBlocker = null;
 	private static Square seqFinisher = null;
 	private static Square seqBlocker = null;
 	private static final int NORTH_SOUTH = 1;

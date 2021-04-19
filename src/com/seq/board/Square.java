@@ -23,6 +23,10 @@ public class Square implements Comparable<Square> {
 		return square != null && StringUtils.isNotBlank( square.color ) && !square.color.equals( SeqBot.get().getMyTokenColor() );
 	}
 	
+	public static boolean isMine( Square square ) {
+		return square != null && StringUtils.isNotBlank( square.color ) && !square.color.equals( SeqBot.get().getOpponentTokenColor() );
+	}
+	
 	public Integer getPos() {
 		return pos;
 	}

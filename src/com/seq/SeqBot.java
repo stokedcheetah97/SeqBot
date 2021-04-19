@@ -227,4 +227,7 @@ public class SeqBot {
 	private Integer opponentPos = null;
 	private String errMsg = null;
 	private String statusMsg = "SeqBot is ready!";
+	
+	public static int MY_SEQ_COUNT = 0;
+	public static int OPPONENT_SEQ_COUNT = 0;
 }

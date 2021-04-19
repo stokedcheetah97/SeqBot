@@ -3,6 +3,8 @@ package com.seq.util;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+
+import com.seq.SeqBot;
 import com.seq.board.*;
 import com.seq.cards.*;
 
@@ -14,29 +16,25 @@ public class MoveCalculator {
 		double bestScore = 0.0;
 		RangeUtil.populateRanges();
 		
-		if( RangeUtil.getSeqBlocker() != null ) {
-			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
-			return map;
-		} else if( RangeUtil.getSeqFinisher() != null ) {
+		if( RangeUtil.getGameFinisher() != null ) 
+			map.put( RangeUtil.getGameFinisher().getPos(), 1.0 );
+		else if( RangeUtil.getSeqFinisher() != null && SeqBot.MY_SEQ_COUNT == 1 ) 
 			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
-			return map;
+		else if( RangeUtil.getGameBlocker() != null )
+			map.put( RangeUtil.getGameBlocker().getPos(), 1.0 );
+		else if( RangeUtil.getSeqBlocker() != null && SeqBot.OPPONENT_SEQ_COUNT == 1 ) 
+			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
+		else if( RangeUtil.getSeqFinisher() != null ) {
+			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
+			SeqBot.MY_SEQ_COUNT++;
+		} else if( RangeUtil.getSeqBlocker() != null ) {
+			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
+			SeqBot.OPPONENT_SEQ_COUNT++;
 		}
+		if( !map.isEmpty() ) return map;
 	
 		for( Square square: Hand.getAxisRanges().keySet() ) {
-			System.out.println( "Calculating scores for: " + square );
-			Map<Integer, Set<Square>> axisRanges = Hand.getAxisRanges().get( square );
-			double score = 0.0;
-			for( Integer axis: axisRanges.keySet() ) {
-				if( axisRanges.get( axis ) == null ) continue;
-				List<Square> squares = new ArrayList<>( axisRanges.get( axis ) );
-				Collections.sort( squares );
-				while( squares.size() > 4 ) {	
-					List<Square> calcSquares = removeSquaresForCardsInHand( squares.subList( 0, 5 ) );
-					score += calc( availableCardCounts(calcSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize() );
-					squares.remove( 0 );
-				}
-			}
-			
+			double score = getScore( square, Hand.getAxisRanges().get( square ), SeqBot.get().getMyTokenColor() );
 			if( score > 0 ) {
 				System.out.println( "Score [ " + square +" ] = " + score );
 				if( score == bestScore )
@@ -61,6 +59,28 @@ public class MoveCalculator {
 		return map;
 	}
 	
+	
+	public static double getScore( Square square, Map<Integer, Set<Square>> axisRanges, String color ) throws Exception {
+		System.out.println( "Calculating scores for: " + square );
+		double score = 0.0;
+		for( Integer axis: axisRanges.keySet() ) {
+			if( axisRanges.get( axis ) == null ) continue;
+			List<Square> squares = new ArrayList<>( axisRanges.get( axis ) );
+			Collections.sort( squares );
+			while( squares.size() > 4 ) {	
+				if( color.equals(SeqBot.get().getMyTokenColor()) ) {
+					List<Square> calcSquares = removeSquaresForCardsInHand( squares.subList( 0, 5 ) );
+					score += calc( availableCardCounts(calcSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize() );
+				} else
+					score += calcOpponent( availableCardCounts(squares), Deck.countTwoEyeJacks(), Deck.getDeckSize() );
+				
+				squares.remove( 0 );
+			}
+		}
+		return score;
+	}
+	
+	
 	private static List<Square> removeSquaresForCardsInHand( List<Square> squares ) {
 		List<Square> calcSquares = new ArrayList<>( squares );
 		List<Square> haveCardsForTheseSquares = new ArrayList<>();
@@ -82,6 +102,10 @@ public class MoveCalculator {
 
 		int numCardsNeeded = counts.size() - Hand.getTwoEyeJacks().size() - countedCards.size();
 		return numCardsNeeded < 1;		
+	}
+	
+	private static double calcOpponent( Map<Square, Integer> counts, int numWild, int deckSize ) throws Exception {
+		return 0.0;
 	}
 	
 	private static double calc( Map<Square, Integer> counts, int numWild, int deckSize ) throws Exception {
