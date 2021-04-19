@@ -13,32 +13,35 @@ public class Deck {
 		return PLAYED_CARDS.get( card ) == null ? 2 : 2 - PLAYED_CARDS.get( card ) - SeqBot.NUM_CARDS;
 	}
 	
-	public static void playCard( Card card )  throws Exception {
-		System.out.println( "Play card: " + card );
-		if( card.getRank().equals( CardRank.CARD_J ) ) 
-			playJack( card );
-		else {
-			if( PLAYED_CARDS.get( card ) == null ) PLAYED_CARDS.put( card, 0 );
-			PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
-			if( PLAYED_CARDS.get( card ) > 2 ) 
-				throw new Exception( "Cannot play 3 of the same card!  Card = " + card.toString() );
-		}
+	public static void returnCard( Card card )  throws Exception {
+		System.out.println( "Return card to deck: " + card );
+		if( PLAYED_CARDS.get( card ) == null )
+			throw new Exception( "Cannot return card to deck, it has not been played: " + card );
+		if( PLAYED_CARDS.get( card ) == 1 ) PLAYED_CARDS.remove( card );
+		else PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
 	}
 	
-	private static void playJack( Card card )  throws Exception {
+	public static void playCard( Card card )  throws Exception {
+		System.out.println( "Play card: " + card );
+		if( PLAYED_CARDS.get( card ) == null ) PLAYED_CARDS.put( card, 0 );
+		PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
+		if( PLAYED_CARDS.get( card ) > 2 ) 
+			throw new Exception( "Cannot play 3 of the same card!  Card = " + card.toString() );
 		
+	}
+	
+	public static void playJack( Card card, Card target )  throws Exception {
 		if( card.getSuit().equals( CardSuit.DIAMONDS ) || card.getSuit().equals( CardSuit.CLUBS ) ) {
 			twoEyeJacks--;
-			System.out.println( "Play Two-Eye Jack as wild for: " + card );
+			System.out.println( "Use Two-Eye Jack to play " + target );
 		} else {
 			oneEyeJacks--;
-			System.out.println( "Play One-Eye Jack to remove: " + card );
-			if( PLAYED_CARDS.get( card ) == 0 ) 
-				throw new Exception( "Cannot remove unplayed card: " + card );
+			System.out.println( "Use One-Eye Jack to remove " + target );
+			if( PLAYED_CARDS.get( target ) == 0 ) 
+				throw new Exception( "Cannot remove unplayed card: " + target );
 			
-			if( REMOVED_CARDS.get( card ) == null ) REMOVED_CARDS.put( card, 0 );
-			
-			REMOVED_CARDS.put( card, REMOVED_CARDS.get( card ) + 1 );
+			if( REMOVED_CARDS.get( target ) == null ) REMOVED_CARDS.put( target, 0 );
+			REMOVED_CARDS.put( target, REMOVED_CARDS.get( target ) + 1 );
 		}
 	}
 	

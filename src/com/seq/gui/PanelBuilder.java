@@ -1,21 +1,16 @@
 package com.seq.gui;
 
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
+import java.awt.event.*;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
+import javax.swing.*;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.seq.SeqBot;
 import com.seq.board.Board;
-import com.seq.cards.Card;
-import com.seq.cards.CardSuit;
-import com.seq.cards.Hand;
+import com.seq.cards.*;
+
 
 public class PanelBuilder {
 	
@@ -114,15 +109,9 @@ public class PanelBuilder {
 		jackPanel.add( GuiController.get().getOpponentSuitPicklist(), BorderLayout.CENTER );
 		jackPanel.add( new JLabel( SPACER + SPACER + SPACER ), BorderLayout.EAST );
 		
-		JPanel checkboxPanel = new JPanel( new BorderLayout() );
-		checkboxPanel.add( new JLabel( SPACER + "  One-Eye Jack:            " ), BorderLayout.WEST );
-		checkboxPanel.add( GuiController.get().getOneEyedJackCheckbox(), BorderLayout.CENTER );
-
 		JPanel basePanel = new JPanel( new BorderLayout() );
 		basePanel.add( movePanel, BorderLayout.NORTH );
-		basePanel.add( jackPanel, BorderLayout.CENTER );
-		//ßbasePanel.add( checkboxPanel, BorderLayout.SOUTH );
-		
+		basePanel.add( jackPanel, BorderLayout.CENTER );		
 		
 		JPanel spacePanel = new JPanel( new BorderLayout() ); 
 		spacePanel.add( new JLabel( SPACER ), BorderLayout.NORTH );
@@ -138,7 +127,7 @@ public class PanelBuilder {
 		
 		JButton nextMoveButton = new JButton( "Next Move" );
 		JButton updateButton = new JButton( "Update" );
-		JButton cancelButton = new JButton( "Cancel" );
+		JButton undoButton = new JButton( "Undo" );
 		JButton quitButton = new JButton( "Quit" );
 		
 		nextMoveButton.addActionListener( new ActionListener() {
@@ -146,6 +135,7 @@ public class PanelBuilder {
 			public void actionPerformed( ActionEvent e ) {
 				try {
 					System.out.println( "Calculating next move..." );
+					SeqBot.get().clearPrev();
 					SeqBot.get().setCalcNextMove( true );
 					SeqBot.get().setOpponentTokenColor( (String) GuiController.get().getOpponentColorPicklist().getSelectedItem() );
 					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
@@ -156,11 +146,10 @@ public class PanelBuilder {
 							 msg = "SeqBot found " + SeqBot.get().getMyNextMove().size() + " equal moves: " + SeqBot.get().getMyNextMove() + "\n\n" + msg;
 						System.out.println( msg );
 						GuiController.showInfo(  msg );
-					} else
-						GuiController.showError();
+					} 
 					SeqBot.get().setStatusMsg( "Hand [ " + Hand.get() + " ]" );
 				} catch( Exception ex ) {
-					JOptionPane.showMessageDialog( GuiController.get(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+					SeqBot.get().setErrMsg( ex.getMessage() );
 					ex.printStackTrace();
 				}
 				GuiController.get().refresh();
@@ -174,26 +163,39 @@ public class PanelBuilder {
 					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
 					SeqBot.get().setCalcNextMove( false );
 					SeqBot.get().setOpponentTokenColor( (String) GuiController.get().getOpponentColorPicklist().getSelectedItem() );
+
 					String pos = GuiController.get().getTokenPosition().getText();
-					if( !pos.isEmpty() )
-						SeqBot.get().setOpponentPos( Integer.valueOf( pos ) );
 					String cardRank = (String) GuiController.get().getCardRankPicklist().getSelectedItem();
 					int cardSuitIndex = GuiController.get().getCardSuitPicklist().getSelectedIndex();
+					
 					if( cardRank != null && cardSuitIndex > 0 ) {
+						SeqBot.get().clearPrev();
 						SeqBot.get().setMyNewCard( new Card( CardSuit.SUIT_CODES[cardSuitIndex], cardRank ) );
 						SeqBot.get().processRequest();
 						if( SeqBot.get().getErrMsg() == null )
 							System.out.println( "Add " + SeqBot.get().getMyNewCard() + " to hand" );
-						else
-							GuiController.showError();
 						SeqBot.get().setStatusMsg("Hand [ " + Hand.get() + " ]");
-					} else {
+					} else if ( StringUtils.isNotBlank( SeqBot.get().getOpponentTokenColor() ) && !pos.isEmpty() ) {
+						SeqBot.get().clearPrev();
+						SeqBot.get().setOpponentPos( Integer.valueOf( pos ) );
+						String jackSuit = (String) GuiController.get().getOpponentSuitPicklist().getSelectedItem();
+						if( StringUtils.isNotBlank(jackSuit) ) jackSuit = CardSuit.suits.get(jackSuit);
+						SeqBot.get().setOpponentJackSuit( jackSuit );
+						SeqBot.get().setPrevOpponentPos( Integer.valueOf( pos ) );
+						SeqBot.get().setPrevOpponentJackSuit(jackSuit);
+						
+						String jackMsg = StringUtils.isNotBlank(jackSuit) ? " using the " + new Card(jackSuit, CardRank.CARD_J) : "";
+						String msg = null;
+						if( jackSuit.equals(CardSuit.SPADES) || jackSuit.equals(CardSuit.HEARTS) )
+							msg = "Remove " + SeqBot.get().getMyTokenColor() + " token" + jackMsg + " for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos# " + SeqBot.get().getOpponentPos() + "?";
+						else if( jackSuit.equals(CardSuit.CLUBS) || jackSuit.equals(CardSuit.DIAMONDS) )
+							msg = "Play " + SeqBot.get().getOpponentTokenColor() + " token" + jackMsg + " for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos# " + SeqBot.get().getOpponentPos() + "?";
+				
+						GuiController.showConfirmationWindow( msg );
 						SeqBot.get().processRequest();
-						if( SeqBot.get().getErrMsg() == null )
-							GuiController.showInfo( "Played " + SeqBot.get().getOpponentTokenColor() + " token for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos # " + SeqBot.get().getOpponentPos() );
-						else
-							GuiController.showError();
-					}
+					} else 
+						SeqBot.get().setErrMsg( "Either [SeqBot color+rank+suit] or [Opponent color+move] are required!" );
+					
 				} catch( Exception ex ) {
 					SeqBot.get().setErrMsg( ex.getMessage() );
 					ex.printStackTrace();
@@ -202,10 +204,12 @@ public class PanelBuilder {
 			}
 		} );
 
-		cancelButton.addActionListener( new ActionListener() {
+		undoButton.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				System.out.println( "CANCEL button activated" );
+				System.out.println( "UNDO button activated" );
+				SeqBot.get().undoLastRequest();
+				SeqBot.get().clearPrev();
 				GuiController.get().refresh();
 			}
 		} );
@@ -221,7 +225,7 @@ public class PanelBuilder {
 		p.setLayout( new GridLayout( 0, 4 ) );
 		p.add( updateButton );
 		p.add( nextMoveButton );
-		p.add( cancelButton );
+		p.add( undoButton );
 		p.add( quitButton );
 		return p;
 	}

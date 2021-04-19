@@ -13,11 +13,11 @@ public class Card implements Comparable<Card>{
 	}
 	
 	public boolean isOneEyeJack() {
-		return rank.equals( CardRank.CARD_J ) && (suit.equals( CardSuit.DIAMONDS ) || suit.equals( CardSuit.CLUBS ) );
+		return rank.equals( CardRank.CARD_J ) && (suit.equals( CardSuit.HEARTS ) || suit.equals( CardSuit.SPADES ) );
 	}
 	
 	public boolean isTwoEyeJack() {
-		return rank.equals( CardRank.CARD_J ) && (suit.equals( CardSuit.HEARTS ) || suit.equals( CardSuit.SPADES ) );
+		return rank.equals( CardRank.CARD_J ) && (suit.equals( CardSuit.DIAMONDS ) || suit.equals( CardSuit.CLUBS ) );
 	}
 	
 	public String getSuit() {

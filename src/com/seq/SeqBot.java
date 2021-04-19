@@ -10,7 +10,7 @@ import com.seq.util.*;
 public class SeqBot {
 	
 	public static final int NUM_CARDS = 7;
-	public static final boolean MOCK_HAND = false;
+	public static final boolean MOCK_HAND = true;
 	
 	public static void main( String[] args ) {
 		System.out.println( "SeqBot loading..." );
@@ -32,7 +32,7 @@ public class SeqBot {
 				if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) throw new Exception( "Silly human - our opponent must place a token!" );
 				if( myNewCard == null ) throw new Exception( "Silly human - tell me what card to draw!" );
 				Hand.addCard( myNewCard );
-				
+
 				if( Hand.get().size() == NUM_CARDS)
 					NEXT_MOVE = OPPNENTS_MOVE;
 			} catch( Exception ex ) {
@@ -40,14 +40,25 @@ public class SeqBot {
 			}
 		else if( isPlaceOpponentToken() ) 
 			try {
-				if( NEXT_MOVE != null &&  NEXT_MOVE.equals( DRAW_CARD ) ) throw new Exception( "Silly human - SeqBot must draw a card!" );
-				if( NEXT_MOVE != null &&  NEXT_MOVE.equals( MY_MOVE ) ) throw new Exception( "Silly human - SeqBot must place a token!" );
-				if( opponentPos == null ) throw new Exception( "Silly human - tell me where our opponent moved!" );
-				if( opponentPos == 1 || opponentPos == 10 || opponentPos == 90 || opponentPos == 100  ) throw new Exception( "Silly human - cannot play on wilcard corner squares!" );
-				if( opponentPos < 1 || opponentPos > 100   ) throw new Exception( "Silly human - valid positions range from 2 - 99!" );
-
+				if( NEXT_MOVE != null &&  NEXT_MOVE.equals( DRAW_CARD ) ) 
+					throw new Exception( "Silly human - SeqBot must draw a card!" );
+				if( NEXT_MOVE != null &&  NEXT_MOVE.equals( MY_MOVE ) ) 
+					throw new Exception( "Silly human - SeqBot must place a token!" );
+				if( opponentPos == null ) 
+					throw new Exception( "Silly human - tell me where our opponent moved!" );
+				if( opponentPos == 1 || opponentPos == 10 || opponentPos == 90 || opponentPos == 100  ) 
+					throw new Exception( "Silly human - cannot play on wilcard corner squares!" );
+				if( opponentPos < 1 || opponentPos > 100   ) 
+					throw new Exception( "Silly human - valid positions range from 2 - 99!" );
+				if( StringUtils.isNotBlank(Board.getSquare( opponentPos ).getColor())  )
+					throw new Exception( "Silly human - there is already a " + Board.getSquare( opponentPos ).getColor() + " token @pos #" + opponentPos );
+				
 				Board.addToken( opponentPos, opponentTokenColor );
-				Deck.playCard( Board.getSquare( opponentPos ).getCard() );
+				if( StringUtils.isBlank(opponentJackSuit) )
+					Deck.playCard( Board.getSquare( opponentPos ).getCard() );
+				else
+					Deck.playJack( new Card( opponentJackSuit, CardRank.CARD_J ), Board.getSquare( opponentPos ).getCard() );
+				
 				NEXT_MOVE = MY_MOVE;
 			} catch( Exception ex) {
 				logError( ex, "Failed to play " + opponentTokenColor + " token on " + Board.getSquare( opponentPos ).getCard() + " @pos: " + opponentPos );
@@ -67,12 +78,12 @@ public class SeqBot {
 				if( playSquare.getColor() != null && playSquare.getColor().equals( opponentTokenColor ) 
 							&& !Hand.get().contains( playSquare.getCard() ) && Hand.getOneEyeJacks().size() > 0 ) {
 					card = Hand.getOneEyeJacks().iterator().next();
-					Board.addToken( myNextMove.get(0), myTokenColor );
+					Board.removeToken( playSquare.getPos() );
 				} else if( !Hand.get().contains( card ) && Hand.getTwoEyeJacks().size() > 0 ) {
 					card = Hand.getTwoEyeJacks().iterator().next();
-					Board.removeToken( playSquare.getPos() );
+					Board.addToken( playSquare.getPos(), myTokenColor );
 				} else 
-					Board.addToken( myNextMove.get(0), myTokenColor );
+					Board.addToken( playSquare.getPos(), myTokenColor );
 
 				Deck.playCard( card );
 				Hand.removeCard( card );
@@ -93,6 +104,32 @@ public class SeqBot {
 	public static SeqBot get() {
 		if( seqBot == null ) seqBot = new SeqBot();
 		return seqBot;
+	}
+	
+	public void undoLastRequest() {
+		try {
+			String msg = "Undo Action!  ";
+			if( prevOpponentPos != null ) {
+				Board.removeToken( prevOpponentPos );
+				if( prevOpponentJackSuit != null ) {
+					Card jack = new Card(prevOpponentJackSuit, CardRank.CARD_J);
+					msg += " Return " + jack + " to the deck.  ";
+					Deck.returnCard( jack );
+				} else {
+					msg += "Remove " + Board.getSquare( prevOpponentPos );
+					Deck.returnCard( Board.getSquare( prevOpponentPos ).getCard() );
+				}
+				NEXT_MOVE = OPPNENTS_MOVE;
+			} else if( prevMyNewCard != null ) {
+				Hand.removeCard( prevMyNewCard );
+				NEXT_MOVE = DRAW_CARD;
+			}
+			
+			GuiController.showInfo( msg );
+			
+		} catch( Exception ex) {
+			logError( ex, "Failed to undo last move" );
+		}
 	}
 
 	private boolean isDrawCard() {
@@ -158,6 +195,10 @@ public class SeqBot {
 	public void setMyNewCard(Card myNewCard) {
 		this.myNewCard = myNewCard;
 	}
+	
+	public void setPrevMyNewCard(Card prevMyNewCard) {
+		this.prevMyNewCard = prevMyNewCard;
+	}
 
 	public List<Integer> getMyNextMove() {
 		return myNextMove;
@@ -191,12 +232,20 @@ public class SeqBot {
 		this.opponentPos = opponentPos;
 	}
 	
+	public void setPrevOpponentPos(Integer prevOpponentPos) {
+		this.prevOpponentPos = prevOpponentPos;
+	}
+	
 	public String getOpponentJackSuit() {
 		return opponentJackSuit;
 	}
 
 	public void setOpponentJackSuit(String opponentJackSuit) {
 		this.opponentJackSuit = opponentJackSuit;
+	}
+	
+	public void setPrevOpponentJackSuit(String prevOpponentJackSuit) {
+		this.prevOpponentJackSuit = prevOpponentJackSuit;
 	}
 
 	public String getErrMsg() {
@@ -214,6 +263,12 @@ public class SeqBot {
 	public void setStatusMsg(String statusMsg) {
 		this.statusMsg = statusMsg;
 	}
+	
+	public void clearPrev() {
+		prevOpponentPos = null;
+		prevOpponentJackSuit = "";
+		prevMyNewCard = null;
+	}
 
 	private static SeqBot seqBot = null;
 	private static final String MY_MOVE = "MY_MOVE";
@@ -229,6 +284,10 @@ public class SeqBot {
 	private Integer opponentPos = null;
 	private String errMsg = null;
 	private String statusMsg = "SeqBot is ready!";
+	
+	private Integer prevOpponentPos = null;
+	private String prevOpponentJackSuit = "";
+	private Card prevMyNewCard = null;
 	
 	public static int MY_SEQ_COUNT = 0;
 	public static int OPPONENT_SEQ_COUNT = 0;

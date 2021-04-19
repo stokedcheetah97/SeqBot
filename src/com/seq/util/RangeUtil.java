@@ -180,11 +180,18 @@ public class RangeUtil {
 		for( int i=4; i<8; i++ ) squares[i+1] = getNextSquare( squares[i], axis, true );
 		return squares;	
 	}
-	
 	private static Square getNextSquare( Square square, int axis, boolean goForward ) {
-		if( square == null ) return null;
-		int step = getStepSize( axis ) * ( goForward ? 1 : -1 );
-		return Board.getSquare( square.getPos() + step );
+		if( square == null || isOnEdge( square, axis, goForward ? 9 : 0) ) return null;
+		int stepSize = getStepSize( axis ) * ( goForward ? 1 : -1 );
+		return Board.getSquare( square.getPos() + stepSize );
+	}
+	
+	private static boolean isOnEdge( Square square, int axis, int edge ) {
+		int oppositeEdge = edge == 9 ? 0 : 9;
+		return 	(axis == NORTH_SOUTH && square.getRow() == edge) ||
+				(axis == WEST_EAST && square.getCol() == edge) ||
+				(axis == NW_SE && (square.getCol() == edge || square.getRow() == edge)) ||
+				(axis == NE_SW && ( square.getCol() == oppositeEdge || square.getRow() == edge));
 	}
 
 	private static int getStepSize( int axis ) {

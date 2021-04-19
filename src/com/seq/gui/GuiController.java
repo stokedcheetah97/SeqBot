@@ -21,10 +21,14 @@ public class GuiController extends JFrame {
 	}
 	
 	public void refresh() {
+		
+		if( SeqBot.get().getErrMsg() != null ) GuiController.showError();
+		
 		cardRankPicklist.setSelectedIndex( 0 );
 		cardSuitPicklist.setSelectedIndex( 0 );
+		opponentSuitPicklist.setSelectedIndex( 0 );
 		tokenPosition.setText( "" );
-		oneEyedJackCheckbox.setSelected( false );
+
 
 		if( SeqBot.get().getMyTokenColor() != null )
 			myColorPicklist.setSelectedItem( SeqBot.get().getMyTokenColor() );
@@ -36,13 +40,14 @@ public class GuiController extends JFrame {
 		else 
 			opponentColorPicklist.setSelectedIndex( 0 );
 		
+		SeqBot.get().setCalcNextMove(false);
 		SeqBot.get().setOpponentTokenColor("");
+		SeqBot.get().setOpponentJackSuit("");
 		SeqBot.get().setOpponentPos(null);
 		SeqBot.get().setMyNewCard(null);
-		SeqBot.get().setCalcNextMove(false);
 		SeqBot.get().setMyNextMove(null);
-		SeqBot.get().setOpponentJackSuit("");
-		
+		SeqBot.get().setErrMsg(null);
+
 		remove( get().getGuiPanel() );
 		setGuiPanel( PanelBuilder.buildGuiPanel() );
 		add( getGuiPanel(), BorderLayout.CENTER );
@@ -58,6 +63,11 @@ public class GuiController extends JFrame {
 	public static void showError() {
 		JOptionPane.showMessageDialog( GuiController.get(), SeqBot.get().getErrMsg(), "Error", JOptionPane.ERROR_MESSAGE );
 		SeqBot.get().setErrMsg( null );
+	}
+	
+	public static void showConfirmationWindow( String msg ) throws Exception {
+		int n = JOptionPane.showOptionDialog( GuiController.get(), msg, "Action Required", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[] { "OK", "Cancel" }, "Cancel" );
+		if( n == JOptionPane.NO_OPTION ) throw new Exception( "User cancelled action!" );
 	}
 	
 	public static GuiController get() {
@@ -88,10 +98,6 @@ public class GuiController extends JFrame {
 	public JComboBox<String> getMyColorPicklist() {
 		return myColorPicklist;
 	}
-	
-	public JCheckBox getOneEyedJackCheckbox() {
-		return oneEyedJackCheckbox;
-	}
 
 	public JPanel getGuiPanel() {
 		return guiPanel;
@@ -105,7 +111,6 @@ public class GuiController extends JFrame {
 	private static GuiController gui = null;
 	private JPanel guiPanel = null;
 	private JTextField tokenPosition = new JTextField();
-	private JCheckBox oneEyedJackCheckbox = new JCheckBox();
 	private JComboBox<String> cardRankPicklist = new JComboBox<String>( CardRank.RANK_NAMES );
 	private JComboBox<String> cardSuitPicklist = new JComboBox<String>( CardSuit.SUIT_NAMES );
 	private JComboBox<String> opponentSuitPicklist = new JComboBox<String>( CardSuit.SUIT_NAMES );

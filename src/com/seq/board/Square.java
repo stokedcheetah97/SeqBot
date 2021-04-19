@@ -38,6 +38,14 @@ public class Square implements Comparable<Square> {
 	public void setColor( String color ) {
 		this.color = color;
 	}
+	
+	public int getRow() {
+		return ( pos - 1 ) / 10;
+	}
+	
+	public int getCol() {
+		return ( pos - 1 ) % 10;
+	}
 
 	@Override
 	public int hashCode() {
@@ -68,13 +76,7 @@ public class Square implements Comparable<Square> {
 		return getCard() + "@" + pos + (StringUtils.isNotBlank(color) ? "=" + color : "");
 	}
 	
-	private int getRow() {
-		return ( pos - 1 ) / 10;
-	}
 	
-	private int getCol() {
-		return ( pos - 1 ) % 10;
-	}
 	
 	private Integer pos;
 	private String color;
