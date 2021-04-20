@@ -15,7 +15,8 @@ public class SeqBot {
 	public static final boolean MOCK_HAND = true;
 	public static final boolean ENABLE_SOUND = true;
 	public static final String SLASH = "\\";
-	public static final String PROJ_ROOT = "C:\\Users\\mikes\\git\\SeqBot\\";
+	public static final String IMAGE_PATH = "C:\\Users\\mikes\\git\\SeqBot\\img\\board.jpeg";
+	public static final String AUDIO_PATH = "C:\\Users\\mikes\\git\\SeqBot\\sound\\";
 	
 	public static void main( String[] args ) {
 

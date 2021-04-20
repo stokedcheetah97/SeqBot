@@ -64,7 +64,7 @@ public class AudioUtil {
 			if (!SeqBot.ENABLE_SOUND)
 				return;
 
-			File soundFile = new File(SeqBot.PROJ_ROOT + "sound" + SeqBot.SLASH + fileName);
+			File soundFile = new File(SeqBot.AUDIO_PATH + fileName);
 			AudioInputStream audio = AudioSystem.getAudioInputStream(soundFile);
 
 			DataLine.Info info = new DataLine.Info(Clip.class, audio.getFormat());

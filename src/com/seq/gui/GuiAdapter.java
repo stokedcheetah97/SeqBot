@@ -10,7 +10,7 @@ import com.seq.util.*;
 
 
 public class GuiAdapter extends JFrame {
-	
+	 
 	public GuiAdapter() {}
 
 	public void init() {
@@ -18,8 +18,8 @@ public class GuiAdapter extends JFrame {
 		setSize( 500, 410 );
 		setLayout( new BorderLayout() );
 		setVisible( true );
-		guiPanel = PanelBuilder.buildGuiPanel();
-		add( guiPanel, BorderLayout.CENTER );
+		gui = PanelBuilder.get();
+		add( gui, BorderLayout.CENTER );
 	}
 	
 	public void refresh() {
@@ -50,7 +50,7 @@ public class GuiAdapter extends JFrame {
 		SeqBot.get().setErrMsg(null);
 
 		remove( get().getGuiPanel() );
-		setGuiPanel( PanelBuilder.buildGuiPanel() );
+		setGuiPanel( PanelBuilder.get() );
 		add( getGuiPanel(), BorderLayout.CENTER );
 		revalidate();
 		repaint();
@@ -73,8 +73,8 @@ public class GuiAdapter extends JFrame {
 	}
 	
 	public static GuiAdapter get() {
-		if( gui == null ) gui = new GuiAdapter();
-		return gui;
+		if( guiAdapter == null ) guiAdapter = new GuiAdapter();
+		return guiAdapter;
 	}
 	
 	public JTextField getTokenPosition() {
@@ -102,16 +102,16 @@ public class GuiAdapter extends JFrame {
 	}
 
 	public JPanel getGuiPanel() {
-		return guiPanel;
+		return gui;
 	}
 	
-	public void setGuiPanel( JPanel guiPanel ) {
-		this.guiPanel = guiPanel;
+	public void setGuiPanel( JPanel gui ) {
+		this.gui = gui;
 	}
 
 	static final long serialVersionUID = 8222590183237060065L;
-	private static GuiAdapter gui = null;
-	private JPanel guiPanel = null;
+	private static GuiAdapter guiAdapter = null;
+	private JPanel gui = null;
 	private JTextField tokenPosition = new JTextField();
 	private JComboBox<String> cardRankPicklist = new JComboBox<String>( CardRank.RANK_NAMES );
 	private JComboBox<String> cardSuitPicklist = new JComboBox<String>( CardSuit.SUIT_NAMES );

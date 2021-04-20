@@ -16,7 +16,6 @@ public class RangeUtil {
 		gameFinisher = null;
 		gameBlocker = null;
 		oneEyeJackTarget = null;
-		twoEyeJackTarget = null;
 		
 		if( Hand.getTwoEyeJacks().size() > 0 ) {
 			seqFinisher = getBestTwoEyeJackTarget( SeqBot.get().getMyTokenColor() );
@@ -250,7 +249,6 @@ public class RangeUtil {
 	}
 	
 	private static Square oneEyeJackTarget = null;
-	private static Square twoEyeJackTarget = null;
 	private static Square gameFinisher = null;
 	private static Square gameBlocker = null;
 	private static Square seqFinisher = null;
