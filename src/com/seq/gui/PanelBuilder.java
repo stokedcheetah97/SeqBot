@@ -140,13 +140,6 @@ public class PanelBuilder {
 					SeqBot.get().setOpponentTokenColor( (String) GuiController.get().getOpponentColorPicklist().getSelectedItem() );
 					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
 					SeqBot.get().processRequest();
-					if( SeqBot.get().getErrMsg() == null ) {
-						String msg = "Play " + SeqBot.get().getMyTokenColor() + " token on " + Board.getSquare( SeqBot.get().getMyNextMove().get(0) ).getCard() + " @Pos # " + SeqBot.get().getMyNextMove().get(0);
-						if( SeqBot.get().getMyNextMove().size() > 1 ) 
-							 msg = "SeqBot found " + SeqBot.get().getMyNextMove().size() + " equal moves: " + SeqBot.get().getMyNextMove() + "\n\n" + msg;
-						System.out.println( msg );
-						GuiController.showInfo(  msg );
-					} 
 					SeqBot.get().setStatusMsg( "Hand [ " + Hand.get() + " ]" );
 				} catch( Exception ex ) {
 					SeqBot.get().setErrMsg( ex.getMessage() );
@@ -183,15 +176,6 @@ public class PanelBuilder {
 						SeqBot.get().setOpponentJackSuit( jackSuit );
 						SeqBot.get().setPrevOpponentPos( Integer.valueOf( pos ) );
 						SeqBot.get().setPrevOpponentJackSuit(jackSuit);
-						
-						String jackMsg = StringUtils.isNotBlank(jackSuit) ? " using the " + new Card(jackSuit, CardRank.CARD_J) : "";
-						String msg = null;
-						if( jackSuit.equals(CardSuit.SPADES) || jackSuit.equals(CardSuit.HEARTS) )
-							msg = "Remove " + SeqBot.get().getMyTokenColor() + " token" + jackMsg + " for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos# " + SeqBot.get().getOpponentPos() + "?";
-						else if( jackSuit.equals(CardSuit.CLUBS) || jackSuit.equals(CardSuit.DIAMONDS) )
-							msg = "Play " + SeqBot.get().getOpponentTokenColor() + " token" + jackMsg + " for " + Board.getSquare( SeqBot.get().getOpponentPos() ).getCard() + " @Pos# " + SeqBot.get().getOpponentPos() + "?";
-				
-						GuiController.showConfirmationWindow( msg );
 						SeqBot.get().processRequest();
 					} else 
 						SeqBot.get().setErrMsg( "Either [SeqBot color+rank+suit] or [Opponent color+move] are required!" );

@@ -1,6 +1,5 @@
 package com.seq;
 
-import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import com.seq.board.*;
 import com.seq.cards.*;
@@ -25,6 +24,14 @@ public class SeqBot {
 		GuiController.get().refresh();
 	}
 	
+	private static String getConfirmationMsg( Square square, String jackSuit, String playTokenColor, String removeTokenColor ) {
+		if(  StringUtils.isNotBlank(jackSuit) && (jackSuit.equals(CardSuit.SPADES) || jackSuit.equals(CardSuit.HEARTS)) )
+			return "Remove " + removeTokenColor + " token using the " + new Card(jackSuit, CardRank.CARD_J) + " for " + square.getCard() + " @Pos #" + square.getPos();
+		else if(  StringUtils.isNotBlank(jackSuit) )
+			return "Play " + playTokenColor + " token using the " + new Card(jackSuit, CardRank.CARD_J) + " for " + square.getCard() + " @Pos #" + square.getPos();
+		return "Play " + playTokenColor + " token for " + square.getCard() + " @Pos# " + square.getPos();
+	}
+	
 	public void processRequest() {
 		if( isDrawCard() ) 
 			try {
@@ -32,7 +39,6 @@ public class SeqBot {
 				if( NEXT_MOVE != null && NEXT_MOVE.equals( OPPNENTS_MOVE ) ) throw new Exception( "Silly human - our opponent must place a token!" );
 				if( myNewCard == null ) throw new Exception( "Silly human - tell me what card to draw!" );
 				Hand.addCard( myNewCard );
-
 				if( Hand.get().size() == NUM_CARDS)
 					NEXT_MOVE = OPPNENTS_MOVE;
 			} catch( Exception ex ) {
@@ -52,6 +58,8 @@ public class SeqBot {
 					throw new Exception( "Silly human - valid positions range from 2 - 99!" );
 				if( StringUtils.isNotBlank(Board.getSquare( opponentPos ).getColor())  )
 					throw new Exception( "Silly human - there is already a " + Board.getSquare( opponentPos ).getColor() + " token @pos #" + opponentPos );
+
+				GuiController.showConfirmationWindow( getConfirmationMsg( Board.getSquare( opponentPos ), opponentJackSuit, opponentTokenColor, myTokenColor ) );
 				
 				Board.addToken( opponentPos, opponentTokenColor );
 				if( StringUtils.isBlank(opponentJackSuit) )
@@ -62,7 +70,7 @@ public class SeqBot {
 				NEXT_MOVE = MY_MOVE;
 			} catch( Exception ex) {
 				logError( ex, "Failed to play " + opponentTokenColor + " token on " + Board.getSquare( opponentPos ).getCard() + " @pos: " + opponentPos );
-			}
+			} 
 		else if( isCalculateMove() )
 			try {
 				if( NEXT_MOVE != null && NEXT_MOVE.equals( DRAW_CARD ) ) throw new Exception( "Silly human - SeqBot must draw a card!" );
@@ -71,22 +79,24 @@ public class SeqBot {
 				System.out.println( "SeqBot calculating next move... " );
 				if( Hand.get().size() != NUM_CARDS ) throw new Exception( "Must have " + NUM_CARDS + " in hand" );
 				Hand.clearAxisRanges();
-				myNextMove = new ArrayList<>( MoveCalculator.get().keySet() );
-				Collections.sort( myNextMove );	
-				Square playSquare = Board.getSquare( myNextMove.get(0) );
-				Card card = playSquare.getCard();
-				if( playSquare.getColor() != null && playSquare.getColor().equals( opponentTokenColor ) 
-							&& !Hand.get().contains( playSquare.getCard() ) && Hand.getOneEyeJacks().size() > 0 ) {
+				myNextMove = MoveCalculator.get();
+				
+				Card card = myNextMove.getCard();
+				if( myNextMove.getColor() != null && myNextMove.getColor().equals( opponentTokenColor ) 
+					&& !Hand.get().contains( myNextMove.getCard() ) && Hand.getOneEyeJacks().size() > 0 ) {
 					card = Hand.getOneEyeJacks().iterator().next();
-					Board.removeToken( playSquare.getPos() );
+					Board.removeToken( myNextMove.getPos() );
 				} else if( !Hand.get().contains( card ) && Hand.getTwoEyeJacks().size() > 0 ) {
 					card = Hand.getTwoEyeJacks().iterator().next();
-					Board.addToken( playSquare.getPos(), myTokenColor );
+					Board.addToken( myNextMove.getPos(), myTokenColor );
 				} else 
-					Board.addToken( playSquare.getPos(), myTokenColor );
+					Board.addToken( myNextMove.getPos(), myTokenColor );
 
 				Deck.playCard( card );
 				Hand.removeCard( card );
+				
+				String jackSuit = card.getRank().equals( CardRank.CARD_J ) ? card.getSuit() : null;
+				GuiController.showInfo( getConfirmationMsg( myNextMove, jackSuit, myTokenColor, opponentTokenColor ) );
 				NEXT_MOVE = DRAW_CARD;
 			} catch( Exception ex) {
 				logError( ex, "Failed to calculate move" );
@@ -167,17 +177,38 @@ public class SeqBot {
 
 	private static void mockHand() {
 		try {
-			Hand.addCard( new Card(CardSuit.SPADES, CardRank.CARD_2) );
-			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_7) );
-			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_2) );
-			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_5) );
-			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_6) );
-			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_2) );
+
+			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_J) );
 			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_J) );
+			Hand.addCard( new Card(CardSuit.SPADES, CardRank.CARD_J) );
+			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_A) );
+			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_A) );
+			Hand.addCard( new Card(CardSuit.SPADES, CardRank.CARD_6) );
+			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_A) );
 			
 			SeqBot.get().setMyTokenColor( TokenColor.BLUE );
 			SeqBot.get().setOpponentTokenColor( TokenColor.RED );
-
+			
+			Board.addToken( 2, TokenColor.BLUE );
+			Board.addToken( 3, TokenColor.BLUE );
+			Board.addToken( 4, TokenColor.BLUE );
+			Deck.playCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_6) );
+			Deck.playCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_7) );
+			Deck.playCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_8) );
+			
+			Board.addToken( 92, TokenColor.RED );
+			Board.addToken( 93, TokenColor.RED );
+			Board.addToken( 44, TokenColor.RED );
+			Deck.playCard( new Card(CardSuit.SPADES, CardRank.CARD_9) );
+			Deck.playCard( new Card(CardSuit.SPADES, CardRank.CARD_8) );
+			Deck.playCard( new Card(CardSuit.SPADES, CardRank.CARD_7) );
+			
+			
+			
+			
+			
+			
+			
 			System.out.println( "SeqBot loaded mock hand" );
 		} catch( Exception ex) {
 			ex.printStackTrace();
@@ -200,11 +231,11 @@ public class SeqBot {
 		this.prevMyNewCard = prevMyNewCard;
 	}
 
-	public List<Integer> getMyNextMove() {
+	public Square getMyNextMove() {
 		return myNextMove;
 	}
 
-	public void setMyNextMove(List<Integer> myNextMove) {
+	public void setMyNextMove(Square myNextMove) {
 		this.myNextMove = myNextMove;
 	}
 
@@ -277,7 +308,7 @@ public class SeqBot {
 	private static String NEXT_MOVE = null;
 	boolean calcNextMove = false;
 	private Card myNewCard = null;
-	private List<Integer> myNextMove = null;
+	private Square myNextMove = null;
 	private String myTokenColor = "";
 	private String opponentTokenColor = "";
 	private String opponentJackSuit = "";

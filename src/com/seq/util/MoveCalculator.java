@@ -10,55 +10,44 @@ import com.seq.cards.*;
 
 public class MoveCalculator {
 	
-	public static Map<Integer, Double> get() throws Exception {
-		Map<Integer, Double> map = new HashMap<>();
-		List<Square> bestSquares = new ArrayList<>();
+	public static Square get() throws Exception {
+		Square bestMove = null;
 		double bestScore = 0.0;
 		RangeUtil.populateRanges();
 		
 		if( RangeUtil.getGameFinisher() != null ) 
-			map.put( RangeUtil.getGameFinisher().getPos(), 1.0 );
+			return RangeUtil.getGameFinisher();
 		else if( RangeUtil.getSeqFinisher() != null && SeqBot.MY_SEQ_COUNT == 1 ) 
-			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
+			return RangeUtil.getSeqFinisher();
 		else if( RangeUtil.getOneEyeJackTarget() != null && SeqBot.OPPONENT_SEQ_COUNT == 1 )
-			map.put( RangeUtil.getOneEyeJackTarget().getPos(), 1.0 );
+			return RangeUtil.getOneEyeJackTarget();
 		else if( RangeUtil.getGameBlocker() != null )
-			map.put( RangeUtil.getGameBlocker().getPos(), 1.0 );
+			return RangeUtil.getGameBlocker();
 		else if( RangeUtil.getSeqBlocker() != null && SeqBot.OPPONENT_SEQ_COUNT == 1 ) 
-			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
+			return RangeUtil.getSeqBlocker();
 		else if( RangeUtil.getSeqFinisher() != null ) {
-			map.put( RangeUtil.getSeqFinisher().getPos(), 1.0 );
 			SeqBot.MY_SEQ_COUNT++;
+			return RangeUtil.getSeqFinisher();
 		} else if( RangeUtil.getOneEyeJackTarget() != null )
-			map.put( RangeUtil.getOneEyeJackTarget().getPos(), 1.0 );
+			return RangeUtil.getOneEyeJackTarget();
 		else if( RangeUtil.getSeqBlocker() != null )
-			map.put( RangeUtil.getSeqBlocker().getPos(), 1.0 );
-	
-		if( !map.isEmpty() ) return map;
-	
+			return RangeUtil.getSeqBlocker();
+
 		for( Square square: Hand.getAxisRanges().keySet() ) {
 			double score = getScore( Hand.getAxisRanges().get( square ), SeqBot.get().getMyTokenColor() );
 			if( score > 0 ) {
 				System.out.println( "Score [ " + square +" ] = " + score );
-				if( score == bestScore )
-					bestSquares.add( square );
-				else if( score > bestScore ) {
-					bestSquares.clear();
-					bestSquares.add( square );
+				if( score > bestScore ) {
+					bestMove = square;
 					bestScore = score;
-					System.out.println( "New Best Score [ " + square +" ] = " + bestScore );
+					System.out.println( "New Best Score [ " + bestMove +" ] = " + bestScore );
 				}  
 			}
 		}
 	
-		if( bestSquares.isEmpty() ) throw new Exception( "Failed to identify best square in range" );
+		if( bestMove == null ) throw new Exception( "Failed to identify best square in range" );
 
-		List<Integer> positions = bestSquares.stream().map(s -> s.getPos()).collect(Collectors.toList());
-		for( Integer i: positions ) {
-			map.put(i, bestScore);
-			System.out.println( "Final Best Score [ " + Board.getSquare(i) +" ] = " + bestScore );
-		}
-		return map;
+		return bestMove;
 	}
 	
 	

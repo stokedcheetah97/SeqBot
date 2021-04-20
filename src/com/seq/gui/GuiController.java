@@ -66,7 +66,7 @@ public class GuiController extends JFrame {
 	}
 	
 	public static void showConfirmationWindow( String msg ) throws Exception {
-		int n = JOptionPane.showOptionDialog( GuiController.get(), msg, "Action Required", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[] { "OK", "Cancel" }, "Cancel" );
+		int n = JOptionPane.showOptionDialog( GuiController.get(), msg + "?", "Confirm Action", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[] { "OK", "Cancel" }, "Cancel" );
 		if( n == JOptionPane.NO_OPTION ) throw new Exception( "User cancelled action!" );
 	}
 	
