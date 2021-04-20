@@ -20,16 +20,15 @@ public class MoveCalculator {
 			return RangeUtil.getGameFinisher();
 		}
 		if (RangeUtil.getSeqFinisher() != null && SeqBot.MY_SEQ_COUNT == 1) {
+			AudioUtil.playGenius();
 			AudioUtil.playSchwifty();
 			return RangeUtil.getSeqFinisher();
 		}
 		if (RangeUtil.getOneEyeJackTarget() != null && SeqBot.OPPONENT_SEQ_COUNT == 1) {
-			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getOneEyeJackTarget();
 		}
 		if (RangeUtil.getGameBlocker() != null) {
-			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getGameBlocker();
 		}
