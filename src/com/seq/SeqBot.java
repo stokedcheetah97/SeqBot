@@ -1,6 +1,9 @@
 package com.seq;
 
+import java.util.ArrayList;
+
 import org.apache.commons.lang3.StringUtils;
+
 import com.seq.board.*;
 import com.seq.cards.*;
 import com.seq.gui.*;
@@ -10,18 +13,37 @@ public class SeqBot {
 	
 	public static final int NUM_CARDS = 7;
 	public static final boolean MOCK_HAND = true;
+	public static final boolean ENABLE_SOUND = true;
+	public static final String SLASH = "\\";
+	public static final String PROJ_ROOT = "C:\\Users\\mikes\\git\\SeqBot\\";
 	
 	public static void main( String[] args ) {
+
 		System.out.println( "SeqBot loading..." );
-		GuiController.get().init();
+		GuiAdapter.get().init();
 		System.out.println( "SeqBot has become self-aware" );
 		if( MOCK_HAND ) {
-			mockHand();
+			MockHandUtil.init();
 			get().setStatusMsg( "  My Hand:                    " + Hand.get() );
 		} else 
 			get().setStatusMsg( "  SeqBot must draw " + NUM_CARDS + " cards to begin" );
 		
-		GuiController.get().refresh();
+		GuiAdapter.get().refresh();
+		AudioUtil.playShowGot();
+	}
+	
+	public static void logGameState() {
+		System.out.println( "\n==================================================================" );
+		System.out.println( " HAND:          " + Hand.get() );
+		System.out.println( "------------------------------------------------------------------" );
+		System.out.println( " BOARD:         " + new ArrayList<Square>(Board.getTokens()) );
+		System.out.println( "------------------------------------------------------------------" );
+		System.out.println( " Deck Size:     " + Deck.getDeckSize() );
+		System.out.println( "------------------------------------------------------------------" );
+		System.out.println( " Cards played:  " + Deck.getPlayedCards() );
+		System.out.println( "------------------------------------------------------------------" );
+		System.out.println( " Cards removed: " + Deck.getRemovedCards() );
+		System.out.println( "==================================================================\n" );
 	}
 	
 	private static String getConfirmationMsg( Square square, String jackSuit, String playTokenColor, String removeTokenColor ) {
@@ -59,8 +81,12 @@ public class SeqBot {
 				if( StringUtils.isNotBlank(Board.getSquare( opponentPos ).getColor())  )
 					throw new Exception( "Silly human - there is already a " + Board.getSquare( opponentPos ).getColor() + " token @pos #" + opponentPos );
 
-				GuiController.showConfirmationWindow( getConfirmationMsg( Board.getSquare( opponentPos ), opponentJackSuit, opponentTokenColor, myTokenColor ) );
-				
+				GuiAdapter.showConfirmationWindow( getConfirmationMsg( Board.getSquare( opponentPos ), opponentJackSuit, opponentTokenColor, myTokenColor ) );
+				String jackSuit = (String) GuiAdapter.get().getOpponentSuitPicklist().getSelectedItem();
+				if( StringUtils.isNotBlank(jackSuit) )
+					AudioUtil.playLikeGot();
+				else
+					AudioUtil.playMyMan();
 				Board.addToken( opponentPos, opponentTokenColor );
 				if( StringUtils.isBlank(opponentJackSuit) )
 					Deck.playCard( Board.getSquare( opponentPos ).getCard() );
@@ -80,23 +106,22 @@ public class SeqBot {
 				if( Hand.get().size() != NUM_CARDS ) throw new Exception( "Must have " + NUM_CARDS + " in hand" );
 				Hand.clearAxisRanges();
 				myNextMove = MoveCalculator.get();
-				
+					
 				Card card = myNextMove.getCard();
-				if( myNextMove.getColor() != null && myNextMove.getColor().equals( opponentTokenColor ) 
-					&& !Hand.get().contains( myNextMove.getCard() ) && Hand.getOneEyeJacks().size() > 0 ) {
-					card = Hand.getOneEyeJacks().iterator().next();
-					Board.removeToken( myNextMove.getPos() );
-				} else if( !Hand.get().contains( card ) && Hand.getTwoEyeJacks().size() > 0 ) {
+				if( !Hand.get().contains(card) && myNextMove.getColor().equals(myTokenColor) ) {
 					card = Hand.getTwoEyeJacks().iterator().next();
 					Board.addToken( myNextMove.getPos(), myTokenColor );
-				} else 
-					Board.addToken( myNextMove.getPos(), myTokenColor );
-
+				}
+				else if( !Hand.get().contains(card) ) {
+					card = Hand.getOneEyeJacks().iterator().next();
+					Board.removeToken( myNextMove.getPos() );
+				}
+				
 				Deck.playCard( card );
 				Hand.removeCard( card );
 				
 				String jackSuit = card.getRank().equals( CardRank.CARD_J ) ? card.getSuit() : null;
-				GuiController.showInfo( getConfirmationMsg( myNextMove, jackSuit, myTokenColor, opponentTokenColor ) );
+				GuiAdapter.showInfo( getConfirmationMsg( myNextMove, jackSuit, myTokenColor, opponentTokenColor ) );
 				NEXT_MOVE = DRAW_CARD;
 			} catch( Exception ex) {
 				logError( ex, "Failed to calculate move" );
@@ -109,6 +134,8 @@ public class SeqBot {
 			logError( new Exception( "Silly human - our opponent must place a token!" ), "SeqBot is confused" );
 		else 
 			logError( new Exception( "Invalid state" ), "SeqBot is confused" );
+		
+		logGameState();
 	}
 	
 	public static SeqBot get() {
@@ -135,7 +162,7 @@ public class SeqBot {
 				NEXT_MOVE = DRAW_CARD;
 			}
 			
-			GuiController.showInfo( msg );
+			GuiAdapter.showInfo( msg );
 			
 		} catch( Exception ex) {
 			logError( ex, "Failed to undo last move" );
@@ -174,47 +201,8 @@ public class SeqBot {
 		System.out.println( "opponentJackSuit: " + opponentJackSuit );
 		System.out.println( "opponentPos: " + opponentPos );
 	}
-
-	private static void mockHand() {
-		try {
-
-			Hand.addCard( new Card(CardSuit.CLUBS, CardRank.CARD_J) );
-			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_J) );
-			Hand.addCard( new Card(CardSuit.SPADES, CardRank.CARD_J) );
-			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_A) );
-			Hand.addCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_A) );
-			Hand.addCard( new Card(CardSuit.SPADES, CardRank.CARD_6) );
-			Hand.addCard( new Card(CardSuit.HEARTS, CardRank.CARD_A) );
-			
-			SeqBot.get().setMyTokenColor( TokenColor.BLUE );
-			SeqBot.get().setOpponentTokenColor( TokenColor.RED );
-			
-			Board.addToken( 2, TokenColor.BLUE );
-			Board.addToken( 3, TokenColor.BLUE );
-			Board.addToken( 4, TokenColor.BLUE );
-			Deck.playCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_6) );
-			Deck.playCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_7) );
-			Deck.playCard( new Card(CardSuit.DIAMONDS, CardRank.CARD_8) );
-			
-			Board.addToken( 92, TokenColor.RED );
-			Board.addToken( 93, TokenColor.RED );
-			Board.addToken( 44, TokenColor.RED );
-			Deck.playCard( new Card(CardSuit.SPADES, CardRank.CARD_9) );
-			Deck.playCard( new Card(CardSuit.SPADES, CardRank.CARD_8) );
-			Deck.playCard( new Card(CardSuit.SPADES, CardRank.CARD_7) );
-			
-			
-			
-			
-			
-			
-			
-			System.out.println( "SeqBot loaded mock hand" );
-		} catch( Exception ex) {
-			ex.printStackTrace();
-		}
-	}
 	
+
 	public void setCalcNextMove(boolean calcNextMove) {
 		this.calcNextMove = calcNextMove;
 	}

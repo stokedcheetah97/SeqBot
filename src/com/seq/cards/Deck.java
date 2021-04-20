@@ -56,6 +56,24 @@ public class Deck {
 	public static int countTwoEyeJacks() {
 		return twoEyeJacks;
 	}
+	
+	public static List<Card> getPlayedCards() {
+		List<Card> cards = new ArrayList<>();
+		for( Card card: PLAYED_CARDS.keySet() ) {
+			cards.add( card );
+			if(PLAYED_CARDS.get( card ) == 2 ) cards.add( card );
+		}
+		return cards;
+	}
+	
+	public static List<Card> getRemovedCards() {
+		List<Card> cards = new ArrayList<>();
+		for( Card card: REMOVED_CARDS.keySet() ) {
+			cards.add( card );
+			if(REMOVED_CARDS.get( card ) == 2 ) cards.add( card );
+		}
+		return cards;
+	}
 
 	private static Map<Card, Integer> PLAYED_CARDS = new TreeMap<>();
 	private static Map<Card, Integer> REMOVED_CARDS = new TreeMap<>();

@@ -1,0 +1,28 @@
+[ INFO ] [ 2021/04/20 14:24:32:664 ] projectRootDir = C:\Users\mikes\git\SeqBot\
+[ INFO ] [ 2021/04/20 14:24:32:664 ] slash = /
+[ INFO ] [ 2021/04/20 14:24:32:665 ] logLevel = INFO
+[ INFO ] [ 2021/04/20 14:24:32:665 ] logDir = C:\Users\mikes\git\SeqBot\/logs/
+[ INFO ] [ 2021/04/20 14:24:32:665 ] SeqBot loading...
+[ INFO ] [ 2021/04/20 14:24:32:788 ] SeqBot has become self-aware
+[ INFO ] [ 2021/04/20 14:24:32:789 ] SeqBot drew card: JC
+[ INFO ] [ 2021/04/20 14:24:32:790 ] SeqBot drew card: JD
+[ INFO ] [ 2021/04/20 14:24:32:790 ] SeqBot drew card: JS
+[ INFO ] [ 2021/04/20 14:24:32:790 ] SeqBot drew card: AH
+[ INFO ] [ 2021/04/20 14:24:32:791 ] SeqBot drew card: AD
+[ INFO ] [ 2021/04/20 14:24:32:791 ] SeqBot drew card: 6S
+[ INFO ] [ 2021/04/20 14:24:32:791 ] SeqBot drew card: AH
+[ INFO ] [ 2021/04/20 14:24:32:793 ] Play card: 6D
+[ INFO ] [ 2021/04/20 14:24:32:793 ] Play card: 7D
+[ INFO ] [ 2021/04/20 14:24:32:793 ] Play card: 8D
+[ INFO ] [ 2021/04/20 14:24:32:794 ] Play card: 9S
+[ INFO ] [ 2021/04/20 14:24:32:795 ] Play card: 8S
+[ INFO ] [ 2021/04/20 14:24:32:795 ] Play card: 7S
+[ INFO ] [ 2021/04/20 14:24:32:795 ] SeqBot loaded mock hand
+[ INFO ] [ 2021/04/20 14:24:32:838 ] SeqBot feels refreshed!
+[ INFO ] [ 2021/04/20 14:24:34:378 ] Calculating next move...
+[ INFO ] [ 2021/04/20 14:24:34:384 ] SeqBot calculating next move... 
+[ INFO ] [ 2021/04/20 14:24:34:405 ] Play card: JC
+[ INFO ] [ 2021/04/20 14:24:38:692 ] SeqBot feels refreshed!
+[ INFO ] [ 2021/04/20 14:24:47:273 ] SeqBot drew card: QS
+[ INFO ] [ 2021/04/20 14:24:47:273 ] Add QS to hand
+[ INFO ] [ 2021/04/20 14:24:47:279 ] SeqBot feels refreshed!

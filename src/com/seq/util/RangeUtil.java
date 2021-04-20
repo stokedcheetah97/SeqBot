@@ -28,31 +28,34 @@ public class RangeUtil {
 		
 		if( seqFinisher == null && seqBlocker == null && oneEyeJackTarget == null )
 			for( Square square: Board.getOpenSquares() ) 
-				for( int axis: AXIS_DIRECTIONS )
+				for( int axis: AXIS_DIRECTIONS ) 
 					setAxisRange( square, axis, getAxisSquares( square, axis ) );
+				
+		System.out.println("Range populated!");	
 	}
 	
 	public static Square getOneEyeJackTarget() {
+		gameFinisher.setColor(SeqBot.get().getOpponentTokenColor());
 		return oneEyeJackTarget;
 	}
-	
-	public static Square getTwoEyeJackTarget() {
-		return twoEyeJackTarget;
-	}
-	
+
 	public static Square getSeqFinisher() {
+		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
 		return seqFinisher;
 	}
 	
 	public static Square getSeqBlocker() {
+		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
 		return seqBlocker;
 	}
 	
 	public static Square getGameFinisher() {
+		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
 		return gameFinisher;
 	}
 	
 	public static Square getGameBlocker() {
+		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
 		return gameBlocker;
 	}
 	
@@ -68,10 +71,9 @@ public class RangeUtil {
 		for( Integer axis : axisRanges.keySet() )
 			for( Square square: axisRanges.get(axis) )
 				if( Square.isOpponents( square ) ) oppSquares.add( square );
-		
+		 
 		
 		for( Square square: oppSquares ) {
-			square.setColor( "" );
 			Map<Integer, Set<Square>> altAxisRanges = new HashMap<>();
 			for( Integer axis : axisRanges.keySet() ) {
 				Set<Square> tmp = new TreeSet<>( axisRanges.get(axis) );
@@ -83,7 +85,7 @@ public class RangeUtil {
 			if( alternateScore < worstAlternateScore ) {
 				worstAlternateScore = alternateScore;
 				bestTarget = square;
-				System.out.println( "New worse Score [ " + square + " ] = " + worstAlternateScore );
+				System.out.println( "New worst Score [ " + square + " ] = " + worstAlternateScore );
 			}
 		}
 
@@ -137,14 +139,15 @@ public class RangeUtil {
 		return map;
 	}
 	
-	private static List<Square> removeNulls(List<Square> squares) {
-		List<Square> nonNullSquares = new ArrayList<>();
-		for( int i = 0; i < squares.size(); i ++ )
-			if( squares.get(i) != null ) nonNullSquares.add( squares.get(i) );
-		return nonNullSquares;
+	private static int getSeqSize( List<Square> squares, String color ) {
+		int seqSize = 0;
+		for( Square s: squares )
+			if( s != null && ( s.getColor().equals( color ) || s.isWild() ) ) 
+				seqSize++;
+		return seqSize;
 	}
 
-	private static boolean isPotentialSequence( Square square, String color) {
+	private static boolean isPotentialSequence( Square square, String color ) {
 		
 		if( StringUtils.isNotBlank(square.getColor()) ) return false;
 		int potentialSeqs = 0;
@@ -152,23 +155,21 @@ public class RangeUtil {
 			boolean foundFiveInARow = false;
 			TreeSet<Square> axisSquares = getAxisSquares( square, axis );
 			if( axisSquares != null ) {
-				List<Square> squares = removeNulls( new ArrayList<>( axisSquares ) );
+				List<Square> squares = new ArrayList<>( axisSquares );
 				while( squares.size() > 4 ) {
-					List<Square> potentialSequence = squares.subList( 0, 5 );
-					int seqSize = 0;
-					for( Square s: potentialSequence )
-						if( s != null && ( s.getColor().equals( color ) || s.isWild() ) ) seqSize++;
-					
+					List<Square> testSquares = squares.subList(0, 5);
+					int seqSize = getSeqSize( testSquares, color );
 					if( seqSize == 5 )  {
-						squares.removeAll( potentialSequence );
+						squares.removeAll( testSquares );
 						foundFiveInARow = true;
 					} 
-					else if( seqSize == 4 ) {
+					else if( seqSize == 4 && testSquares.contains( square ) ) { 
 						potentialSeqs++;
-						squares.removeAll( potentialSequence );
+						squares.removeAll( testSquares );	
 					} 
 					else if( !squares.isEmpty() )
 						squares.remove( 0 );
+						
 					seqSize = 0;
 				}
 			}
@@ -189,30 +190,44 @@ public class RangeUtil {
 	}
 
 	private static void setAxisRange( Square square, Integer axis, TreeSet<Square> squares ) {
-		Set<Square> range = new TreeSet<>();
-		while( squares.iterator().hasNext() ) {
-			Square test = squares.iterator().next();
-			if( Square.isOpponents( test ) )
-				if( range.size() < 4 ) range.clear();
-				else {
-					Hand.addAxisRange( square, axis, range );
-					break;
-				}
-			else range.add( test );
+		boolean setRange = false;
+		try {
+			Set<Square> range = new TreeSet<>();
+			Iterator<Square> it = squares.iterator();
+			while( it.hasNext() ) {
+				Square test = it.next();
+				if( Square.isOpponents( test ) )
+					if( range.size() < 4 ) range.clear();
+					else {
+						setRange = true;
+						Hand.addAxisRange( square, axis, range );
+						break;
+					}
+				else range.add( test );
+			}
+		} catch( Exception ex ) {
+			ex.printStackTrace();
 		}
+		
+		if( !setRange )
+			Hand.addAxisRange( square, axis, squares );
 	}
 	
 	private static TreeSet<Square> getAxisSquares( Square square, int axis ) {
 		TreeSet<Square> squares = new TreeSet<>();
-		Square test = square;
-		while( test != null ) {
-			squares.add( test );
-			test = getNextSquare( test, axis, false );
-		}
-		test = square;
-		while( test != null ) {
-			squares.add( test );
-			test = getNextSquare( test, axis, true );
+		try {
+			Square test = square;
+			while( test != null ) {
+				squares.add( test );
+				test = getNextSquare( test, axis, false );
+			}
+			test = square;
+			while( test != null ) {
+				squares.add( test );
+				test = getNextSquare( test, axis, true );
+			}
+		} catch( Exception ex ) {
+			ex.printStackTrace();
 		}
 		return squares;	
 	}

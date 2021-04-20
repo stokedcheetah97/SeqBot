@@ -8,8 +8,10 @@ import javax.swing.*;
 import org.apache.commons.lang3.StringUtils;
 
 import com.seq.SeqBot;
-import com.seq.board.Board;
+import com.seq.board.TokenColor;
 import com.seq.cards.*;
+import com.seq.util.*;
+
 
 
 public class PanelBuilder {
@@ -34,7 +36,7 @@ public class PanelBuilder {
 		centerPanel.add( buildColorPanel(), BorderLayout.NORTH );
 		centerPanel.add( buildDrawPanel(), BorderLayout.CENTER );
 		centerPanel.add( new JLabel( SPACER ), BorderLayout.SOUTH );
-		
+			
 		JPanel southPanel = new JPanel( new BorderLayout() );
 		southPanel.add( new JSeparator(), BorderLayout.NORTH );
 		southPanel.add( new JLabel( SPACER + SPACER + SPACER ), BorderLayout.CENTER );
@@ -60,12 +62,12 @@ public class PanelBuilder {
 		
 		JPanel myColorPanel = new JPanel( new BorderLayout() );
 		myColorPanel.add( new JLabel( SPACER + "  My color:    " + SPACER ), BorderLayout.WEST );
-		myColorPanel.add( GuiController.get().getMyColorPicklist(), BorderLayout.CENTER );
+		myColorPanel.add( GuiAdapter.get().getMyColorPicklist(), BorderLayout.CENTER );
 		myColorPanel.add( new JLabel( SPACER + SPACER ), BorderLayout.EAST );
 		
 		JPanel opponentColorPanel = new JPanel( new BorderLayout() );
 		opponentColorPanel.add( new JLabel( SPACER + "  Opponents Color:      " ), BorderLayout.WEST );
-		opponentColorPanel.add( GuiController.get().getOpponentColorPicklist(), BorderLayout.CENTER );
+		opponentColorPanel.add( GuiAdapter.get().getOpponentColorPicklist(), BorderLayout.CENTER );
 		opponentColorPanel.add( new JLabel( SPACER + SPACER ), BorderLayout.EAST );
 		
 		JPanel colorPanel = new JPanel( new BorderLayout() );
@@ -88,8 +90,8 @@ public class PanelBuilder {
 		
 		JPanel drawPanel = new JPanel( new BorderLayout() );
 		drawPanel.add( new JLabel( SPACER + "  Draw Card:  " + SPACER), BorderLayout.WEST );
-		drawPanel.add( GuiController.get().getCardRankPicklist(), BorderLayout.CENTER );
-		drawPanel.add( GuiController.get().getCardSuitPicklist(), BorderLayout.EAST );
+		drawPanel.add( GuiAdapter.get().getCardRankPicklist(), BorderLayout.CENTER );
+		drawPanel.add( GuiAdapter.get().getCardSuitPicklist(), BorderLayout.EAST );
 		
 		JPanel p = new JPanel( new BorderLayout() );
 		p.add( drawPanel, BorderLayout.WEST );
@@ -101,12 +103,12 @@ public class PanelBuilder {
 		
 		JPanel movePanel = new JPanel( new BorderLayout() );
 		movePanel.add( new JLabel( SPACER + "  Opponents move:       " ), BorderLayout.WEST );
-		movePanel.add( GuiController.get().getTokenPosition(), BorderLayout.CENTER );
+		movePanel.add( GuiAdapter.get().getTokenPosition(), BorderLayout.CENTER );
 		movePanel.add( new JLabel( SPACER + SPACER + SPACER ), BorderLayout.EAST );
 		
 		JPanel jackPanel = new JPanel( new BorderLayout() );
 		jackPanel.add( new JLabel( SPACER + "  Jack Suit:                    " ), BorderLayout.WEST );
-		jackPanel.add( GuiController.get().getOpponentSuitPicklist(), BorderLayout.CENTER );
+		jackPanel.add( GuiAdapter.get().getOpponentSuitPicklist(), BorderLayout.CENTER );
 		jackPanel.add( new JLabel( SPACER + SPACER + SPACER ), BorderLayout.EAST );
 		
 		JPanel basePanel = new JPanel( new BorderLayout() );
@@ -137,15 +139,15 @@ public class PanelBuilder {
 					System.out.println( "Calculating next move..." );
 					SeqBot.get().clearPrev();
 					SeqBot.get().setCalcNextMove( true );
-					SeqBot.get().setOpponentTokenColor( (String) GuiController.get().getOpponentColorPicklist().getSelectedItem() );
-					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
+					SeqBot.get().setOpponentTokenColor( (String) GuiAdapter.get().getOpponentColorPicklist().getSelectedItem() );
+					SeqBot.get().setMyTokenColor( (String) GuiAdapter.get().getMyColorPicklist().getSelectedItem() );
 					SeqBot.get().processRequest();
 					SeqBot.get().setStatusMsg( "Hand [ " + Hand.get() + " ]" );
 				} catch( Exception ex ) {
 					SeqBot.get().setErrMsg( ex.getMessage() );
 					ex.printStackTrace();
 				}
-				GuiController.get().refresh();
+				GuiAdapter.get().refresh();
 			}
 		} );
 
@@ -153,13 +155,13 @@ public class PanelBuilder {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				try {
-					SeqBot.get().setMyTokenColor( (String) GuiController.get().getMyColorPicklist().getSelectedItem() );
+					SeqBot.get().setMyTokenColor( (String) GuiAdapter.get().getMyColorPicklist().getSelectedItem() );
 					SeqBot.get().setCalcNextMove( false );
-					SeqBot.get().setOpponentTokenColor( (String) GuiController.get().getOpponentColorPicklist().getSelectedItem() );
+					SeqBot.get().setOpponentTokenColor( (String) GuiAdapter.get().getOpponentColorPicklist().getSelectedItem() );
 
-					String pos = GuiController.get().getTokenPosition().getText();
-					String cardRank = (String) GuiController.get().getCardRankPicklist().getSelectedItem();
-					int cardSuitIndex = GuiController.get().getCardSuitPicklist().getSelectedIndex();
+					String pos = GuiAdapter.get().getTokenPosition().getText();
+					String cardRank = (String) GuiAdapter.get().getCardRankPicklist().getSelectedItem();
+					int cardSuitIndex = GuiAdapter.get().getCardSuitPicklist().getSelectedIndex();
 					
 					if( cardRank != null && cardSuitIndex > 0 ) {
 						SeqBot.get().clearPrev();
@@ -171,8 +173,7 @@ public class PanelBuilder {
 					} else if ( StringUtils.isNotBlank( SeqBot.get().getOpponentTokenColor() ) && !pos.isEmpty() ) {
 						SeqBot.get().clearPrev();
 						SeqBot.get().setOpponentPos( Integer.valueOf( pos ) );
-						String jackSuit = (String) GuiController.get().getOpponentSuitPicklist().getSelectedItem();
-						if( StringUtils.isNotBlank(jackSuit) ) jackSuit = CardSuit.suits.get(jackSuit);
+						String jackSuit = (String) GuiAdapter.get().getOpponentSuitPicklist().getSelectedItem();
 						SeqBot.get().setOpponentJackSuit( jackSuit );
 						SeqBot.get().setPrevOpponentPos( Integer.valueOf( pos ) );
 						SeqBot.get().setPrevOpponentJackSuit(jackSuit);
@@ -184,7 +185,7 @@ public class PanelBuilder {
 					SeqBot.get().setErrMsg( ex.getMessage() );
 					ex.printStackTrace();
 				}
-				GuiController.get().refresh();
+				GuiAdapter.get().refresh();
 			}
 		} );
 
@@ -192,15 +193,21 @@ public class PanelBuilder {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				System.out.println( "UNDO button activated" );
+				String opponentColor = (String) GuiAdapter.get().getOpponentColorPicklist().getSelectedItem();
+				AudioUtil.playKit();
 				SeqBot.get().undoLastRequest();
 				SeqBot.get().clearPrev();
-				GuiController.get().refresh();
+				SeqBot.get().setOpponentTokenColor( opponentColor );
+				GuiAdapter.get().getOpponentColorPicklist().setSelectedItem( opponentColor );
+				GuiAdapter.get().refresh();
+				SeqBot.get().setOpponentTokenColor( opponentColor );
 			}
 		} );
 
 		quitButton.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
+				AudioUtil.playQuit();
 				System.exit( 0 );
 			}
 		} );

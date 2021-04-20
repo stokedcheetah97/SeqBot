@@ -68,7 +68,7 @@ public class Square implements Comparable<Square> {
 
 	@Override
 	public int compareTo( Square o ) {
-		return o.pos.compareTo( pos );
+		return  pos.compareTo(o.getPos());
 	}
 	
 	@Override

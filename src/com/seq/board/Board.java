@@ -13,8 +13,13 @@ public class Board {
 				squares.addAll( getOpenSquares( card ) );
 		return squares;
 	}
-
+	
+	public static Set<Square> getTokens() {
+		return TOKENS;
+	}
+ 
 	public static void addToken( int pos, String color ) {
+		System.out.println("Add token: " +  new Square( pos, color ) );
 		TOKENS.add( new Square( pos, color ) );
 	}
 	
@@ -26,6 +31,7 @@ public class Board {
 	}
 	
 	public static void removeToken( int pos ) {
+		System.out.println("Remove token: " +  getSquare( pos ) );
 		TOKENS.remove( getSquare( pos ) );
 	}
 
@@ -147,7 +153,7 @@ public class Board {
 	
 	private static Set<Square> getOpenSquares( Card card ) {
 		Set<Square> squares = new TreeSet<>();
-		for( int i=1; i<101; i++ )
+		for( int i=2; i<100; i++ )
 			if( getSquare(i) != null && StringUtils.isBlank(getSquare(i).getColor()) && getSquare(i).getCard().equals( card ) ) 
 				squares.add( getSquare(i) );
 		return squares;
