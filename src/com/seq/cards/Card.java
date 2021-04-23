@@ -12,12 +12,16 @@ public class Card implements Comparable<Card>{
 		this.rank = rank;
 	}
 	
+	public boolean isJack() {
+		return suit.equals( CardRank.CARD_J );
+	}
+		
 	public boolean isOneEyeJack() {
-		return rank.equals( CardRank.CARD_J ) && (suit.equals( CardSuit.HEARTS ) || suit.equals( CardSuit.SPADES ) );
+		return isJack() && (suit.equals( CardSuit.HEARTS ) || suit.equals( CardSuit.SPADES ) );
 	}
 	
 	public boolean isTwoEyeJack() {
-		return rank.equals( CardRank.CARD_J ) && (suit.equals( CardSuit.DIAMONDS ) || suit.equals( CardSuit.CLUBS ) );
+		return isJack() && (suit.equals( CardSuit.DIAMONDS ) || suit.equals( CardSuit.CLUBS ) );
 	}
 	
 	public String getSuit() {

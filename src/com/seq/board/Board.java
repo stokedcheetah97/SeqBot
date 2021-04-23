@@ -24,9 +24,11 @@ public class Board {
 	}
 	
 	public static Square getSquare( int pos ) {
-		if( pos < 1 || pos > 100 ) return null;
+		if( pos < 2 || pos > 99 ) 
+			return null;
 		for( Square t: TOKENS )
-			if( t.getPos() == pos ) return t;
+			if( t.getPos() == pos ) 
+				return t;
 		return new Square( pos, "" );
 	}
 	

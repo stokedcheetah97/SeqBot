@@ -10,7 +10,7 @@ public class CardRank {
 	public static final String CARD_7 = "7";
 	public static final String CARD_8 = "8";
 	public static final String CARD_9 = "9";
-	public static final String CARD_T = "10";
+	public static final String CARD_T = "T";
 	
 	// Hears + Spades = 1-Eyed Jacks
 	public static final String CARD_J = "J";
@@ -21,5 +21,4 @@ public class CardRank {
 
 	public static final String [] RANK_NAMES = new String [] { "", CARD_A, CARD_K, CARD_Q, CARD_J, CARD_T, CARD_9, CARD_8, CARD_7, CARD_6, CARD_5, CARD_4, CARD_3, CARD_2 };
 	public static final Integer [] RANK_VALUES = new Integer [] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-
 }

@@ -13,7 +13,7 @@ public class MoveCalculator {
 		Square bestMove = null;
 		double bestScore = 0.0;
 		RangeUtil.populateRanges();
- 
+		SeqBot.get().setPrevMoveMySeq( SeqBot.MY_SEQ_COUNT );
 		if (RangeUtil.getGameFinisher() != null) {
 			AudioUtil.playGenius();
 			AudioUtil.playSchwifty();
@@ -25,6 +25,7 @@ public class MoveCalculator {
 			return RangeUtil.getSeqFinisher();
 		}
 		if (RangeUtil.getOneEyeJackTarget() != null && SeqBot.OPPONENT_SEQ_COUNT == 1) {
+			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getOneEyeJackTarget();
 		}
@@ -32,63 +33,93 @@ public class MoveCalculator {
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getGameBlocker();
 		}
-		
 		if (RangeUtil.getSeqBlocker() != null && SeqBot.OPPONENT_SEQ_COUNT == 1) {
+			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getSeqBlocker();
 		}
 		if (RangeUtil.getSeqFinisher() != null) {
+			AudioUtil.playGenius();
 			AudioUtil.playHeaven();
 			SeqBot.MY_SEQ_COUNT++;
 			return RangeUtil.getSeqFinisher();
 		}
-
 		if (RangeUtil.getOneEyeJackTarget() != null) {
+			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getOneEyeJackTarget();
 		}
 		if (RangeUtil.getSeqBlocker() != null) {
+			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getSeqBlocker();
 		}
 
+		System.out.println("Check 4 BEST MOVE...");
 		for (Square square : Hand.getAxisRanges().keySet()) {
-			double score = getScore(Hand.getAxisRanges().get(square), SeqBot.get().getMyTokenColor());
-			if (score > 0) {
-				System.out.println("Score [ " + square + " ] = " + score);
-				if (score > bestScore) {
-					bestMove = square;
-					bestScore = score;
-					System.out.println("New Best Score [ " + bestMove + " ] = " + bestScore);
-				}
+			System.out.println("Calculating " + square + "...");
+			Map<Square, Map<Integer, Set<Square>>> myAxisRanges = Hand.getAxisRanges();
+			double score = getScore(square, myAxisRanges.get(square), SeqBot.get().getMyTokenColor(), false);
+			double opponentScore = getScore(square, RangeUtil.getOpponentAxisRange(square), SeqBot.get().getOpponentTokenColor(), false);
+			double totalScore = score + opponentScore;
+			System.out.println( BREAK );
+			System.out.println( "ATTACK Score  [ " + square + " ]: " + score );
+			System.out.println( "DEFENSE Score [ " + square + " ]: " + opponentScore );
+			System.out.println( "TOTAL Score   [ " + square + " ]: " + totalScore );
+			if (totalScore > bestScore) {
+				bestMove = square;
+				bestScore = totalScore;
+				System.out.println("!!! BEST Score [ " + bestMove + " ] = " + bestScore);
 			}
+			Hand.updateScore( square.getCard(), totalScore );
+			System.out.println( "" );
 		}
 
 		if (bestMove == null)
 			throw new Exception("Failed to identify best square in range");
-
 		return bestMove;
 	}
 
-	public static double getScore(Map<Integer, Set<Square>> axisRanges, String color) throws Exception {
+	public static double getScore(Square tokenSquare, Map<Integer, Set<Square>> axisRanges, String color, boolean forJack) throws Exception {
 		double score = 0.0;
+		boolean isAttack = color.equals( SeqBot.get().getMyTokenColor() );
 		for (Integer axis : axisRanges.keySet()) {
 			if (axisRanges.get(axis) == null)
 				continue;
 			List<Square> squares = new ArrayList<>(axisRanges.get(axis));
 			Collections.sort(squares);
+			String msg = (isAttack ? "Attack ": "Defense") + " Axis[" + RangeUtil.AXIS_MAP.get( axis ) + "]:  ";
 			while (squares.size() > 4) {
-				if (color.equals(SeqBot.get().getMyTokenColor())) {
-					List<Square> calcSquares = removeSquaresForCardsInHand(squares.subList(0, 5));
-					System.out.println( "Calc score: " + calcSquares );
-					score += calc(availableCardCounts(calcSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
-				} else
-					score += calcOpponent(availableCardCounts(squares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
+				List<Square> testSquares = squares.subList(0, 5);
+				if( testSquares.contains( tokenSquare ) )
+					if (isAttack) {
+						double testScore = calc(availableCardCounts(testSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
+						double finalScore = testScore;
+						List<Square> withoutHandSquares = removeSquaresForCardsInHand(testSquares);
+						int numCards = 5-withoutHandSquares.size();
+						double inHandScore = 0.0;
+						if( numCards != 0 ) {
+							inHandScore = getScoreConsideringInHandCards( withoutHandSquares );
+							finalScore = ( testScore + inHandScore ) / ( numCards + 1 );
+							System.out.println( "...........................Axis Score(less cards in hand):  " + inHandScore );
+						}
+						System.out.println( "...........................Axis SubSeq score: " + testScore );
+						System.out.println( "...........................Axis Merged score: " + finalScore );
+						score += finalScore;
+					} else
+						score += calcOpponent(availableCardCounts(testSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
 
 				squares.remove(0);
 			}
+			if( !forJack ) System.out.println( msg + score );
 		}
 		return score;
+	}
+	
+	private static final String BREAK = "-------------------------------------------------------------------";
+	
+	private static double getScoreConsideringInHandCards( List<Square> squares) throws Exception {
+		return calc(availableCardCounts(squares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
 	}
 
 	private static List<Square> removeSquaresForCardsInHand(List<Square> squares) {
@@ -133,6 +164,8 @@ public class MoveCalculator {
 			naturalProb = naturalProb * calcOpponent(copyCounts1, numWild, deckSize - 1);
 			wildProb = wildProb * calcOpponent(copyCounts2, numWild > 0 ? numWild - 1 : 0, deckSize - 1);
 		}
+		
+		assert( naturalProb + wildProb < 0.0 );
 		return naturalProb + wildProb;
 	}
 
@@ -153,10 +186,12 @@ public class MoveCalculator {
 		Map<Square, Integer> copyCounts1 = updateCounts(counts, square.getCard());
 		Map<Square, Integer> copyCounts2 = updateCounts(counts, square.getCard());
 
-		if (counts.size() > 0) {
+		if(!counts.isEmpty()) {
 			naturalProb = naturalProb * calc(copyCounts1, numWild, deckSize - 1);
 			wildProb = wildProb * calc(copyCounts2, numWild > 0 ? numWild - 1 : 0, deckSize - 1);
 		}
+
+		assert( naturalProb + wildProb < 0.0 );
 		return naturalProb + wildProb;
 	}
 

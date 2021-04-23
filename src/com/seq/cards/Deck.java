@@ -10,37 +10,51 @@ import com.seq.SeqBot;
 public class Deck {
 	
 	public static int countAvailableCards( Card card ) {
-		return PLAYED_CARDS.get( card ) == null ? 2 : 2 - PLAYED_CARDS.get( card ) - SeqBot.NUM_CARDS;
+		return PLAYED_CARDS.get( card ) == null ? 2 : 2 - PLAYED_CARDS.get( card );
 	}
 	
 	public static void returnCard( Card card )  throws Exception {
 		System.out.println( "Return card to deck: " + card );
-		if( PLAYED_CARDS.get( card ) == null )
+		if( !PLAYED_CARDS.containsKey( card ) )
 			throw new Exception( "Cannot return card to deck, it has not been played: " + card );
-		if( PLAYED_CARDS.get( card ) == 1 ) PLAYED_CARDS.remove( card );
-		else PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
+		if( PLAYED_CARDS.get( card ) == 2 ) 
+			PLAYED_CARDS.put( card, 1 ); 
+		else
+			PLAYED_CARDS.remove( card );
+	}
+	
+	public static void main(String[] args) {
+		try {
+			Card c = new Card(CardSuit.CLUBS, CardRank.CARD_K);
+			Map<Card, Integer> map = new TreeMap<>();
+			map.put( c, 1 );
+			map.put(c, map.get( c ) + 1);
+			System.out.println("Test inc: " + map.get( c ));
+		}catch(Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	public static void playCard( Card card )  throws Exception {
 		System.out.println( "Play card: " + card );
-		if( PLAYED_CARDS.get( card ) == null ) PLAYED_CARDS.put( card, 0 );
+		if( !PLAYED_CARDS.containsKey( card ) ) 
+			PLAYED_CARDS.put( card, 0 );
 		PLAYED_CARDS.put( card, PLAYED_CARDS.get( card ) + 1 );
 		if( PLAYED_CARDS.get( card ) > 2 ) 
 			throw new Exception( "Cannot play 3 of the same card!  Card = " + card.toString() );
 		
 	}
 	
-	public static void playJack( Card card, Card target )  throws Exception {
-		if( card.getSuit().equals( CardSuit.DIAMONDS ) || card.getSuit().equals( CardSuit.CLUBS ) ) {
+	public static void playJack( Card jack, Card target )  throws Exception {
+		if( jack.isTwoEyeJack() ) {
 			twoEyeJacks--;
-			System.out.println( "Use Two-Eye Jack to play " + target );
-		} else {
+		}
+		if( jack.isOneEyeJack() ) {
 			oneEyeJacks--;
-			System.out.println( "Use One-Eye Jack to remove " + target );
-			if( PLAYED_CARDS.get( target ) == 0 ) 
+			if( !PLAYED_CARDS.containsKey( target ) ) 
 				throw new Exception( "Cannot remove unplayed card: " + target );
-			
-			if( REMOVED_CARDS.get( target ) == null ) REMOVED_CARDS.put( target, 0 );
+			if( !REMOVED_CARDS.containsKey( target ) ) 
+				REMOVED_CARDS.put( target, 0 );
 			REMOVED_CARDS.put( target, REMOVED_CARDS.get( target ) + 1 );
 		}
 	}
@@ -61,7 +75,8 @@ public class Deck {
 		List<Card> cards = new ArrayList<>();
 		for( Card card: PLAYED_CARDS.keySet() ) {
 			cards.add( card );
-			if(PLAYED_CARDS.get( card ) == 2 ) cards.add( card );
+			if(PLAYED_CARDS.get( card ) == 2 ) 
+				cards.add( card );
 		}
 		return cards;
 	}
@@ -70,7 +85,8 @@ public class Deck {
 		List<Card> cards = new ArrayList<>();
 		for( Card card: REMOVED_CARDS.keySet() ) {
 			cards.add( card );
-			if(REMOVED_CARDS.get( card ) == 2 ) cards.add( card );
+			if(REMOVED_CARDS.get( card ) == 2 ) 
+				cards.add( card );
 		}
 		return cards;
 	}

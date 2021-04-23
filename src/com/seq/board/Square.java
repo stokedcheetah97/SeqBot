@@ -75,9 +75,7 @@ public class Square implements Comparable<Square> {
 	public String toString() {
 		return getCard() + "@" + pos + (StringUtils.isNotBlank(color) ? "=" + color : "");
 	}
-	
-	
-	
+
 	private Integer pos;
 	private String color;
 }

@@ -4,6 +4,7 @@ import java.util.*;
 
 import com.seq.*;
 import com.seq.board.*;
+import com.seq.gui.PanelBuilder;
 
 public class Hand {
 
@@ -14,6 +15,55 @@ public class Hand {
 			if(CARDS.get( card ) == 2 ) hand.add( card );
 		}
 		return hand;
+	}
+	
+	public static String getOrderedHand() {
+		if( SCORES.isEmpty() ) return get().toString();
+		List<Card> cards = new ArrayList<>( SCORES.keySet() );
+		List<Double> scores = new ArrayList<>();
+		for( Card c: cards )
+			scores.add( cards.indexOf( c ), SCORES.get( c ) );
+		
+		for(int j=cards.size() -1; j>0; j--) 
+			for(int i=0; i<j; i++) {
+				double s1 = scores.get(i);
+				double s2 = scores.get(i+1);
+				Card c1 = cards.get(i);
+				Card c2 = cards.get(i+1);
+				if( s1 < s2 ) {
+					cards.remove(i);
+					cards.add(i, c2);
+					cards.remove(i+1);
+					cards.add(i+1, c1);
+					scores.remove(i);
+					scores.add(i, s2);
+					scores.remove(i+1);
+					scores.add(i+1, s1);
+				}
+			}
+
+		//Map<Card, Double> temp = new HashMap<>( SCORES ); 
+		String output = "";
+		
+		for( Card c: cards ) {
+			output += (output.isEmpty() ? "" : "\n") + SPACER + c.toString() + ":  " + SCORES.get(c).toString();
+			if( CARDS.get( c ) == 2 )
+				output += "\n" + SPACER + c.toString() + ":  " + SCORES.get(c).toString();
+		}
+		
+		if( !twoEyeJacks.isEmpty() || !oneEyeJacks.isEmpty() ) {
+			for( Card c: twoEyeJacks )
+				output += "\n" + SPACER  + c.toString();
+			for( Card c: oneEyeJacks )
+				output += "\n" + SPACER + c.toString();
+		}
+		
+		return output;
+	}
+	
+	public static void updateScore(Card card, Double score) {
+		if( !card.isOneEyeJack()  && !card.isTwoEyeJack() && score > SCORES.get( card ) ) 
+			SCORES.put( card, score );
 	}
 	
 	public static int countInstancesofCardInHand( Card card ) {
@@ -41,13 +91,21 @@ public class Hand {
 		System.out.println( "SeqBot drew card: " + card );
 		if( card.isOneEyeJack() ) oneEyeJacks.add( card );
 		if( card.isTwoEyeJack() ) twoEyeJacks.add( card );
+		if( !SCORES.keySet().contains( card ) && !card.getRank().equals( CardRank.CARD_J ) ) 
+			SCORES.put( card, 0.0 );
 	}
 	
 	public static void removeCard( Card card ) throws Exception {
 		if( CARDS.get( card ) == null ) 
 			throw new Exception( "Cannot remove card " + card + " - it is not in hand." );
-		if( CARDS.get( card ) == 2 ) CARDS.put( card, 1 );
-		else CARDS.remove( card );
+		if( CARDS.get( card ) == 2 ) {
+			CARDS.remove( card );
+			CARDS.put( card, 1 );
+		}
+		else {
+			CARDS.remove( card );
+			SCORES.remove( card );
+		}
 		if( card.isOneEyeJack() ) oneEyeJacks.remove( card );
 		if( card.isTwoEyeJack() ) twoEyeJacks.remove( card );
 	}
@@ -56,7 +114,7 @@ public class Hand {
 		if( AXIS_RANGES.get( square ) == null )
 			AXIS_RANGES.put( square, new HashMap<Integer, Set<Square>>() );
 		AXIS_RANGES.get( square ).put( axis, range );
-		System.out.println( "Set AXIS_RANGE[" + square + "]-Axis#" + axis + " = " + range );
+		//System.out.println( "Set AXIS_RANGE[" + square + "]-Axis#" + axis + " = " + range );
 	}
 	
 	public static void clearAxisRanges() {
@@ -67,6 +125,9 @@ public class Hand {
 		return AXIS_RANGES;
 	}
 	
+	// 45 chars
+	private static final String SPACER = PanelBuilder.SPACER + "                              ";
+	private static Map<Card, Double> SCORES = new TreeMap<>();
 	private static final Set<Card> twoEyeJacks = new HashSet<>();
 	private static final Set<Card> oneEyeJacks = new HashSet<>();
 	private static final Map<Card, Integer> CARDS = new TreeMap<>();

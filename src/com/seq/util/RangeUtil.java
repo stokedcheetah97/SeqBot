@@ -17,13 +17,23 @@ public class RangeUtil {
 		gameBlocker = null;
 		oneEyeJackTarget = null;
 		
-		if( Hand.getTwoEyeJacks().size() > 0 ) {
+		if( !Hand.getTwoEyeJacks().isEmpty() ) {
+			System.out.println(">>>>>>>>>>>>>>>>   Check 4 MY 4-Quences for 2-Eye Jack...");
 			seqFinisher = getBestTwoEyeJackTarget( SeqBot.get().getMyTokenColor() );
+			if( seqFinisher != null )
+				System.out.println(">>>>>>>>>>>>>>>>   SEQ_FINISHER -----------------------> " + seqFinisher);
+			System.out.println(">>>>>>>>>>>>>>>>   Check 4 OPPONENT 4-Quences for 2-Eye Jack...");
 			seqBlocker = getBestTwoEyeJackTarget( SeqBot.get().getOpponentTokenColor() );
+			if( seqBlocker != null )
+				System.out.println(">>>>>>>>>>>>>>>>   SEQ_BLOCKER ------------------------> " + seqBlocker);
 		}
 		
-		if( Hand.getOneEyeJacks().size() > 0 )
+		if( !Hand.getOneEyeJacks().isEmpty() ) {
+			System.out.println(">>>>>>>>>>>>>>>>   Check 4 OPPONENT 4-quences for 1-Eye Jack...");
 			oneEyeJackTarget = getBestOneEyeJackTarget();
+			if( oneEyeJackTarget != null )
+				System.out.println(">>>>>>>>>>>>>>>>   ONE_EYE_JACK_TARGET ----------------> " + oneEyeJackTarget);
+		}
 		
 		if( seqFinisher == null && seqBlocker == null && oneEyeJackTarget == null )
 			for( Square square: Board.getOpenSquares() ) 
@@ -34,34 +44,34 @@ public class RangeUtil {
 	}
 	
 	public static Square getOneEyeJackTarget() {
-		gameFinisher.setColor(SeqBot.get().getOpponentTokenColor());
+		if( oneEyeJackTarget!= null ) oneEyeJackTarget.setColor(SeqBot.get().getOpponentTokenColor());
 		return oneEyeJackTarget;
 	}
 
 	public static Square getSeqFinisher() {
-		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
+		if( seqFinisher!= null ) seqFinisher.setColor(SeqBot.get().getMyTokenColor());
 		return seqFinisher;
 	}
 	
 	public static Square getSeqBlocker() {
-		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
+		if( seqBlocker!= null ) seqBlocker.setColor(SeqBot.get().getMyTokenColor());
 		return seqBlocker;
 	}
 	
 	public static Square getGameFinisher() {
-		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
+		if( gameFinisher!= null ) gameFinisher.setColor(SeqBot.get().getMyTokenColor());
 		return gameFinisher;
 	}
 	
 	public static Square getGameBlocker() {
-		gameFinisher.setColor(SeqBot.get().getMyTokenColor());
+		if( gameBlocker!= null ) gameBlocker.setColor(SeqBot.get().getMyTokenColor());
 		return gameBlocker;
 	}
 	
 	private static Square getBestOneEyeJackTarget() throws Exception {
 		Square target = getBestTwoEyeJackTarget( SeqBot.get().getOpponentTokenColor() );
 		Map<Integer, Set<Square>> axisRanges = getOpponentAxisRange( target );
-		double currentScore = MoveCalculator.getScore( axisRanges, SeqBot.get().getOpponentTokenColor() );
+		double currentScore = MoveCalculator.getScore( target, axisRanges, SeqBot.get().getOpponentTokenColor(), true );
 		
 		Square bestTarget = null;
 		double worstAlternateScore = currentScore;
@@ -69,7 +79,8 @@ public class RangeUtil {
 		Set<Square> oppSquares = new TreeSet<>();
 		for( Integer axis : axisRanges.keySet() )
 			for( Square square: axisRanges.get(axis) )
-				if( Square.isOpponents( square ) ) oppSquares.add( square );
+				if( Square.isOpponents( square ) ) 
+					oppSquares.add( square );
 		 
 		
 		for( Square square: oppSquares ) {
@@ -77,10 +88,10 @@ public class RangeUtil {
 			for( Integer axis : axisRanges.keySet() ) {
 				Set<Square> tmp = new TreeSet<>( axisRanges.get(axis) );
 				tmp.remove( square );
-				tmp.add( square );
 				altAxisRanges.put( axis, tmp );
 			}
-			double alternateScore = MoveCalculator.getScore( altAxisRanges, SeqBot.get().getOpponentTokenColor() );
+			
+			double alternateScore = MoveCalculator.getScore( square, altAxisRanges, SeqBot.get().getOpponentTokenColor(), true );
 			if( alternateScore < worstAlternateScore ) {
 				worstAlternateScore = alternateScore;
 				bestTarget = square;
@@ -90,24 +101,25 @@ public class RangeUtil {
 
 		return bestTarget;
 	}
-		
+	
+	
 	private static Square getBestTwoEyeJackTarget( String color ) throws Exception {
 		Set<Square> targets = new HashSet<>();
 		for( int i=2; i<100; i++ ) 
-			if( isPotentialSequence( Board.getSquare(i), color ) ) targets.add(Board.getSquare(i));
+			if( isPotentialSequence( Board.getSquare(i), color ) ) 
+				targets.add(Board.getSquare(i));
 		
 		Square bestTarget = null;
 		double bestScore = 0.0;
 		for( Square square: targets ) 
 			if( bestTarget == null ) bestTarget = square;
 			else {
-				
 				Map<Integer, Set<Square>> myAxisRanges = new HashMap<>();
 				if( Hand.getAxisRanges().keySet().contains( square ) )
 					myAxisRanges = Hand.getAxisRanges().get( square );
 
 				Map<Integer, Set<Square>> range = color.equals( SeqBot.get().getMyTokenColor() ) ? myAxisRanges : getOpponentAxisRange( square );
-				double score = MoveCalculator.getScore( range, color );
+				double score = MoveCalculator.getScore( square, range, color, true );
 				if( score > bestScore ) {
 					bestScore = score;
 					bestTarget = square;
@@ -117,7 +129,7 @@ public class RangeUtil {
 		return bestTarget;
 	}
 
-	private static Map<Integer, Set<Square>> getOpponentAxisRange( Square square ) {
+	public static Map<Integer, Set<Square>> getOpponentAxisRange( Square square ) {
 		Map<Integer, Set<Square>> map = new HashMap<>();
 		
 		for( int axis: AXIS_DIRECTIONS ) {
@@ -147,8 +159,7 @@ public class RangeUtil {
 	}
 
 	private static boolean isPotentialSequence( Square square, String color ) {
-		
-		if( StringUtils.isNotBlank(square.getColor()) ) return false;
+		if( StringUtils.isNotBlank(square.getColor()) || square.isWild() ) return false;
 		int potentialSeqs = 0;
 		for( int axis: AXIS_DIRECTIONS ) {
 			boolean foundFiveInARow = false;
@@ -189,30 +200,28 @@ public class RangeUtil {
 	}
 
 	private static void setAxisRange( Square square, Integer axis, TreeSet<Square> squares ) {
-		boolean setRange = false;
+		Set<Square> range = new TreeSet<>();
 		try {
-			Set<Square> range = new TreeSet<>();
 			Iterator<Square> it = squares.iterator();
 			while( it.hasNext() ) {
 				Square test = it.next();
 				if( Square.isOpponents( test ) )
-					if( range.size() < 4 ) range.clear();
-					else {
-						setRange = true;
-						Hand.addAxisRange( square, axis, range );
+					if( range.size() < 5 || !range.contains( square )  ) 
+						range.clear();
+					else
 						break;
-					}
 				else range.add( test );
 			}
 		} catch( Exception ex ) {
 			ex.printStackTrace();
 		}
 		
-		if( !setRange )
-			Hand.addAxisRange( square, axis, squares );
+		if( range.size() > 4 && range.contains( square ) ) 
+			Hand.addAxisRange( square, axis, range );
 	}
 	
 	private static TreeSet<Square> getAxisSquares( Square square, int axis ) {
+
 		TreeSet<Square> squares = new TreeSet<>();
 		try {
 			Square test = square;
@@ -230,7 +239,7 @@ public class RangeUtil {
 		}
 		return squares;	
 	}
-	private static Square getNextSquare( Square square, int axis, boolean goForward ) {
+	public static Square getNextSquare( Square square, int axis, boolean goForward ) {
 		if( square == null || isOnEdge( square, axis, goForward ? 9 : 0) ) return null;
 		int stepSize = getStepSize( axis ) * ( goForward ? 1 : -1 );
 		return Board.getSquare( square.getPos() + stepSize );
@@ -253,9 +262,20 @@ public class RangeUtil {
 	private static Square gameBlocker = null;
 	private static Square seqFinisher = null;
 	private static Square seqBlocker = null;
+	private static final String NS = "NS";
+	private static final String WE = "WE";
+	private static final String NW = "NW";
+	private static final String NE = "NE";
+	public static HashMap<Integer, String> AXIS_MAP = new HashMap<>();
 	private static final int NORTH_SOUTH = 1;
 	private static final int WEST_EAST = 2;
 	private static final int NW_SE = 3;
 	private static final int NE_SW = 4;
-	private static final int[] AXIS_DIRECTIONS = { NORTH_SOUTH, WEST_EAST, NW_SE, NE_SW };
+	public static final int[] AXIS_DIRECTIONS = { NORTH_SOUTH, WEST_EAST, NW_SE, NE_SW };
+	static {
+		AXIS_MAP.put( NORTH_SOUTH, NS );
+		AXIS_MAP.put( WEST_EAST, WE );
+		AXIS_MAP.put( NW_SE, NW );
+		AXIS_MAP.put( NE_SW, NE );
+	}
 }

@@ -22,7 +22,7 @@ public class AudioUtil {
 	}
 
 	public static void playMyMan() {
-		playSound("my_man.wav");
+		//playSound("my_man.wav");
 	}
 
 	public static void playGenius() {
