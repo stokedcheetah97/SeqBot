@@ -24,7 +24,7 @@ public class Board {
 	}
 	
 	public static Square getSquare( int pos ) {
-		if( pos < 2 || pos > 99 ) 
+		if( pos < 1 || pos > 100 ) 
 			return null;
 		for( Square t: TOKENS )
 			if( t.getPos() == pos ) 
@@ -155,7 +155,7 @@ public class Board {
 	
 	private static Set<Square> getOpenSquares( Card card ) {
 		Set<Square> squares = new TreeSet<>();
-		for( int i=2; i<100; i++ )
+		for( int i=1; i<=100; i++ )
 			if( getSquare(i) != null && StringUtils.isBlank(getSquare(i).getColor()) && getSquare(i).getCard().equals( card ) ) 
 				squares.add( getSquare(i) );
 		return squares;

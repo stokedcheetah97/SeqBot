@@ -19,12 +19,12 @@ public class Square implements Comparable<Square> {
 		return Board.getCardMatrix()[getRow()][getCol()];
 	}
 	
-	public static boolean isOpponents( Square square ) {
-		return square != null && StringUtils.isNotBlank( square.color ) && !square.color.equals( SeqBot.get().getMyTokenColor() );
+	public boolean isOpponents() {
+		return StringUtils.isNotBlank( color ) && color.equals( SeqBot.get().getOpponentTokenColor() );
 	}
 	
-	public static boolean isMine( Square square ) {
-		return square != null && StringUtils.isNotBlank( square.color ) && !square.color.equals( SeqBot.get().getOpponentTokenColor() );
+	public boolean isMine() {
+		return StringUtils.isNotBlank( color ) && color.equals( SeqBot.get().getMyTokenColor() );
 	}
 	
 	public Integer getPos() {

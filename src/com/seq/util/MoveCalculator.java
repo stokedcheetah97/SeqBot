@@ -60,7 +60,7 @@ public class MoveCalculator {
 			System.out.println("Calculating " + square + "...");
 			Map<Square, Map<Integer, Set<Square>>> myAxisRanges = Hand.getAxisRanges();
 			double score = getScore(square, myAxisRanges.get(square), SeqBot.get().getMyTokenColor(), false);
-			double opponentScore = getScore(square, RangeUtil.getOpponentAxisRange(square), SeqBot.get().getOpponentTokenColor(), false);
+			double opponentScore = getScore(square, RangeUtil.getOpponentAxisRanges(square), SeqBot.get().getOpponentTokenColor(), false);
 			double totalScore = score + opponentScore;
 			System.out.println( BREAK );
 			System.out.println( "ATTACK Score  [ " + square + " ]: " + score );
@@ -69,7 +69,7 @@ public class MoveCalculator {
 			if (totalScore > bestScore) {
 				bestMove = square;
 				bestScore = totalScore;
-				System.out.println("!!! BEST Score [ " + bestMove + " ] = " + bestScore);
+				System.out.println("BEST Score    [ " + bestMove + " ]: " + bestScore);
 			}
 			Hand.updateScore( square.getCard(), totalScore );
 			System.out.println( "" );
@@ -87,7 +87,7 @@ public class MoveCalculator {
 			if (axisRanges.get(axis) == null)
 				continue;
 			List<Square> squares = new ArrayList<>(axisRanges.get(axis));
-			Collections.sort(squares);
+
 			String msg = (isAttack ? "Attack ": "Defense") + " Axis[" + RangeUtil.AXIS_MAP.get( axis ) + "]:  ";
 			while (squares.size() > 4) {
 				List<Square> testSquares = squares.subList(0, 5);
@@ -101,10 +101,13 @@ public class MoveCalculator {
 						if( numCards != 0 ) {
 							inHandScore = getScoreConsideringInHandCards( withoutHandSquares );
 							finalScore = ( testScore + inHandScore ) / ( numCards + 1 );
-							System.out.println( "...........................Axis Score(less cards in hand):  " + inHandScore );
+							if( SeqBot.PRINT_ACCESS_SCORES ) 
+								System.out.println( "...........................Axis Score(less cards in hand):  " + inHandScore );
 						}
-						System.out.println( "...........................Axis SubSeq score: " + testScore );
-						System.out.println( "...........................Axis Merged score: " + finalScore );
+						if( SeqBot.PRINT_ACCESS_SCORES ) {
+							System.out.println( "...........................Axis SubSeq score: " + testScore );
+							System.out.println( "...........................Axis Merged score: " + finalScore );
+						}
 						score += finalScore;
 					} else
 						score += calcOpponent(availableCardCounts(testSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
@@ -136,14 +139,12 @@ public class MoveCalculator {
 	}
 
 	private static boolean hasSequenceCardsInHand(Map<Square, Integer> counts) {
-
 		List<Card> countedCards = new ArrayList<>();
 		for (Square square : counts.keySet())
-			if (Hand.get().contains(square.getCard()) && (!countedCards.contains(square.getCard())
-					|| Hand.countInstancesofCardInHand(square.getCard()) > 1))
+			if (Hand.get().contains(square.getCard()) && (!countedCards.contains(square.getCard()) || Hand.countInstancesofCardInHand(square.getCard()) > 1))
 				countedCards.add(square.getCard());
 
-		int numCardsNeeded = counts.size() - Hand.getTwoEyeJacks().size() - countedCards.size();
+		int numCardsNeeded = counts.size() - countedCards.size();
 		return numCardsNeeded < 1;
 	}
 

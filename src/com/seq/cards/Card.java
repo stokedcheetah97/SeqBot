@@ -13,7 +13,7 @@ public class Card implements Comparable<Card>{
 	}
 	
 	public boolean isJack() {
-		return suit.equals( CardRank.CARD_J );
+		return rank.equals( CardRank.CARD_J );
 	}
 		
 	public boolean isOneEyeJack() {

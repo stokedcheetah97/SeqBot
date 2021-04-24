@@ -84,19 +84,19 @@ public class Hand {
 	public static void addCard( Card card ) throws Exception {
 		if( get().size() > SeqBot.NUM_CARDS )
 			throw new Exception( "Cannot have more than " + SeqBot.NUM_CARDS + " cards in hand!" );
-		if( CARDS.get( card ) == null ) CARDS.put( card, 0 );
+		if( !CARDS.containsKey( card ) ) CARDS.put( card, 0 );
 		CARDS.put( card, CARDS.get( card ) + 1 );
 		if( CARDS.get( card ) > 2 )
 			throw new Exception( "Cannot have more than 2 of the same card in hand.  Found " + CARDS.get( card ) + " for card: " + card );
 		System.out.println( "SeqBot drew card: " + card );
 		if( card.isOneEyeJack() ) oneEyeJacks.add( card );
 		if( card.isTwoEyeJack() ) twoEyeJacks.add( card );
-		if( !SCORES.keySet().contains( card ) && !card.getRank().equals( CardRank.CARD_J ) ) 
+		if( !SCORES.containsKey( card ) && !card.getRank().equals( CardRank.CARD_J ) ) 
 			SCORES.put( card, 0.0 );
 	}
 	
 	public static void removeCard( Card card ) throws Exception {
-		if( CARDS.get( card ) == null ) 
+		if( !CARDS.containsKey( card )  ) 
 			throw new Exception( "Cannot remove card " + card + " - it is not in hand." );
 		if( CARDS.get( card ) == 2 ) {
 			CARDS.remove( card );
@@ -106,12 +106,14 @@ public class Hand {
 			CARDS.remove( card );
 			SCORES.remove( card );
 		}
-		if( card.isOneEyeJack() ) oneEyeJacks.remove( card );
-		if( card.isTwoEyeJack() ) twoEyeJacks.remove( card );
+		if( card.isOneEyeJack() ) 
+			oneEyeJacks.remove( card );
+		if( card.isTwoEyeJack() ) 
+			twoEyeJacks.remove( card );
 	}
 	
 	public static void addAxisRange( Square square, Integer axis, Set<Square> range ) {
-		if( AXIS_RANGES.get( square ) == null )
+		if( !AXIS_RANGES.containsKey( square )  )
 			AXIS_RANGES.put( square, new HashMap<Integer, Set<Square>>() );
 		AXIS_RANGES.get( square ).put( axis, range );
 		//System.out.println( "Set AXIS_RANGE[" + square + "]-Axis#" + axis + " = " + range );

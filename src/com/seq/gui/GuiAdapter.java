@@ -50,6 +50,7 @@ public class GuiAdapter extends JFrame {
 		SeqBot.get().setMyNewCard(null);
 		SeqBot.get().setMyNextMove(null);
 		SeqBot.get().setErrMsg(null);
+		SeqBot.get().setMyJack(null);
 		
 		SeqBot.get().setStatusMsg( SeqBot.get().getStatusMsg() );
 
@@ -58,6 +59,7 @@ public class GuiAdapter extends JFrame {
 		add( getGuiPanel(), BorderLayout.CENTER );
 		revalidate();
 		repaint();
+		SeqBot.logGameState();
 		System.out.println( "SeqBot feels refreshed!" );
 	}
 	
