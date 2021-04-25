@@ -13,18 +13,18 @@ public class MoveCalculator {
 		Square bestMove = null;
 		double bestScore = 0.0;
 		RangeUtil.populateRanges();
-		SeqBot.get().setPrevMoveMySeq( SeqBot.MY_SEQ_COUNT );
+	
 		if (RangeUtil.getGameFinisher() != null) {
 			AudioUtil.playGenius();
 			AudioUtil.playSchwifty();
 			return RangeUtil.getGameFinisher();
 		}
-		if (RangeUtil.getSeqFinisher() != null && SeqBot.MY_SEQ_COUNT == 1) {
+		if (RangeUtil.getSeqFinisher() != null && SeqBot.MY_SEQ_1 != null) {
 			AudioUtil.playGenius();
 			AudioUtil.playSchwifty();
 			return RangeUtil.getSeqFinisher();
 		}
-		if (RangeUtil.getOneEyeJackTarget() != null && SeqBot.OPPONENT_SEQ_COUNT == 1) {
+		if (RangeUtil.getOneEyeJackTarget() != null && SeqBot.OP_SEQ_1 != null) {
 			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getOneEyeJackTarget();
@@ -33,15 +33,14 @@ public class MoveCalculator {
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getGameBlocker();
 		}
-		if (RangeUtil.getSeqBlocker() != null && SeqBot.OPPONENT_SEQ_COUNT == 1) {
+		if (RangeUtil.getSeqBlocker() != null && SeqBot.OP_SEQ_1 != null) {
 			AudioUtil.playGenius();
 			AudioUtil.playWubbaLubbaDubDub();
 			return RangeUtil.getSeqBlocker();
 		}
 		if (RangeUtil.getSeqFinisher() != null) {
-			AudioUtil.playGenius();
+			//AudioUtil.playGenius();
 			AudioUtil.playHeaven();
-			SeqBot.MY_SEQ_COUNT++;
 			return RangeUtil.getSeqFinisher();
 		}
 		if (RangeUtil.getOneEyeJackTarget() != null) {
@@ -59,6 +58,7 @@ public class MoveCalculator {
 		for (Square square : Hand.getAxisRanges().keySet()) {
 			System.out.println("Calculating " + square + "...");
 			Map<Square, Map<Integer, Set<Square>>> myAxisRanges = Hand.getAxisRanges();
+			
 			double score = getScore(square, myAxisRanges.get(square), SeqBot.get().getMyTokenColor(), false);
 			double opponentScore = getScore(square, RangeUtil.getOpponentAxisRanges(square), SeqBot.get().getOpponentTokenColor(), false);
 			double totalScore = score + opponentScore;
@@ -79,6 +79,41 @@ public class MoveCalculator {
 			throw new Exception("Failed to identify best square in range");
 		return bestMove;
 	}
+	
+	private static TreeSet<Square> getBlanks(Collection<Square> squares){
+		TreeSet<Square> blanks = new TreeSet<>();
+		 for( Square s: squares)
+				if( StringUtils.isBlank(s.getColor()) && !s.isWild() )
+					blanks.add( s );
+		 return blanks;
+	}
+	
+	private static boolean willCardImproveChanceOfSeq(Square tokenSquare, List<Square> range) {
+		Set<Square> bestSquares = new HashSet<>();
+		int bestCount = 5;
+		try {
+			Set<Square> allBlanksInRange = getBlanks(range);
+			for(Square s: allBlanksInRange) {
+				List<Square> rangeCopy = new ArrayList<>( range );
+				while (rangeCopy.size() > 4) {
+					List<Square> squares = rangeCopy.subList(0, 5);
+					TreeSet<Square> blanks = getBlanks(squares);
+					if(squares.contains( s ) &&  blanks.size() <= bestCount ) {
+						if( blanks.size() < bestCount )
+							bestSquares.clear();
+						bestCount = blanks.size();
+						bestSquares.add( s );
+					}
+					rangeCopy.remove( 0 );
+				}
+			}
+
+		}catch( Exception ex ) {
+			System.out.println("Error during check if play will improve change of sequence!");
+			ex.printStackTrace();
+		}
+		return bestSquares.isEmpty() || bestSquares.contains( tokenSquare );
+	}
 
 	public static double getScore(Square tokenSquare, Map<Integer, Set<Square>> axisRanges, String color, boolean forJack) throws Exception {
 		double score = 0.0;
@@ -88,11 +123,19 @@ public class MoveCalculator {
 				continue;
 			List<Square> squares = new ArrayList<>(axisRanges.get(axis));
 
+			if( tokenSquare.getPos() == SeqBot.SCORE_BREAK )
+				System.out.println("Found pos: " + SeqBot.SCORE_BREAK);
+			
+			
 			String msg = (isAttack ? "Attack ": "Defense") + " Axis[" + RangeUtil.AXIS_MAP.get( axis ) + "]:  ";
 			while (squares.size() > 4) {
 				List<Square> testSquares = squares.subList(0, 5);
 				if( testSquares.contains( tokenSquare ) )
 					if (isAttack) {
+						if( !willCardImproveChanceOfSeq(tokenSquare, new ArrayList<>(squares))) {
+							squares.remove(0);
+							continue;
+						}
 						double testScore = calc(availableCardCounts(testSquares), Deck.countTwoEyeJacks(), Deck.getDeckSize());
 						double finalScore = testScore;
 						List<Square> withoutHandSquares = removeSquaresForCardsInHand(testSquares);

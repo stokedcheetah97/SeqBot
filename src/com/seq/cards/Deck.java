@@ -21,9 +21,9 @@ public class Deck {
 				JACKS.remove( jack );
 		else if( !PLAYED_CARDS.containsKey( jack ) )
 			throw new Exception( "Cannot return card to deck, it has not been played: " + jack );
-		if( PLAYED_CARDS.get( jack ) == 2 ) 
+		if( PLAYED_CARDS.containsKey( jack ) && PLAYED_CARDS.get( jack ) == 2 ) 
 			PLAYED_CARDS.put( jack, 1 ); 
-		else
+		else if( PLAYED_CARDS.containsKey( jack ) )
 			PLAYED_CARDS.remove( jack );
 	}
 	

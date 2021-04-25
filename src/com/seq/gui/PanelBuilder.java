@@ -140,7 +140,6 @@ public class PanelBuilder {
 			public void actionPerformed( ActionEvent e ) {
 				try {
 					System.out.println( "Calculating next move..." );
-					SeqBot.get().clearPrev();
 					SeqBot.get().setCalcNextMove( true );
 					SeqBot.get().setOpponentTokenColor( (String) GuiAdapter.get().getOpponentColorPicklist().getSelectedItem() );
 					SeqBot.get().setMyTokenColor( (String) GuiAdapter.get().getMyColorPicklist().getSelectedItem() );
@@ -167,7 +166,6 @@ public class PanelBuilder {
 					int cardSuitIndex = GuiAdapter.get().getCardSuitPicklist().getSelectedIndex();
 					
 					if( StringUtils.isNotBlank( cardRank ) && cardSuitIndex > 0 ) {
-						SeqBot.get().clearPrev();
 						SeqBot.get().setMyNewCard( new Card( CardSuit.SUIT_CODES[cardSuitIndex], cardRank ) );
 						SeqBot.get().setMySuit( CardSuit.SUIT_CODES[cardSuitIndex] );
 						SeqBot.get().processRequest();
@@ -175,7 +173,6 @@ public class PanelBuilder {
 							System.out.println( "Add " + SeqBot.get().getMyNewCard() + " to hand" );
 						SeqBot.get().setStatusMsg( Hand.getOrderedHand() );
 					} else if ( StringUtils.isNotBlank( SeqBot.get().getOpponentTokenColor() ) && !pos.isEmpty() ) {
-						SeqBot.get().clearPrev();
 						SeqBot.get().setOpponentPos( Integer.valueOf( pos ) );
 						String jackSuit = (String) GuiAdapter.get().getOpponentSuitPicklist().getSelectedItem();
 						SeqBot.get().setOpponentJackSuit( CardSuit.suits.get(jackSuit) );

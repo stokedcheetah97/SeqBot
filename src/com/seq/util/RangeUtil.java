@@ -43,6 +43,8 @@ public class RangeUtil {
 		System.out.println("Range populated!");	
 	}
 	
+	
+	
 	public static Square getOneEyeJackTarget() {
 		if( oneEyeJackTarget!= null ) oneEyeJackTarget.setColor(SeqBot.get().getOpponentTokenColor());
 		return oneEyeJackTarget;
@@ -87,6 +89,15 @@ public class RangeUtil {
 		return range;
 	}
 	
+	public static boolean willCorruptExistingSeq(Set<Square> squares, Square square, String color) {
+		if( squares == null )
+			return false;
+		Set<Square> testSquares = new TreeSet<>( squares );
+		testSquares.remove( square );
+		Set<Square> consecutiveTokens = getConsecutiveTokens(new ArrayList<>(testSquares), color);
+		return consecutiveTokens.size() < 5;
+	}
+	
 	private static Square getBestOneEyeJackTarget() throws Exception {
 		Square target = getBestTwoEyeJackTarget( SeqBot.get().getOpponentTokenColor() );
 		if( target == null )
@@ -97,6 +108,8 @@ public class RangeUtil {
 		double biggestDiff = 0.0;
 		
 		for( Square square: oppSquares ) {
+			if( willCorruptExistingSeq(SeqBot.OP_SEQ_1, square, SeqBot.get().getOpponentTokenColor()) )
+				continue;
 			
 			Map<Integer, Set<Square>> oppRanges = getOpponentAxisRanges(square);
 			Map<Integer, Set<Square>> lesserRanges = getAxiRangeWithoutSquare(oppRanges, square);
@@ -194,14 +207,15 @@ public class RangeUtil {
 					if( !range.isEmpty() ) {
 						if( !testRange.isEmpty() )
 							range.addAll( testRange );
-						testRange.clear();
-						break;
+						return range;
 					}
 					
-					if( isSeqRange(square, testRange)  ) {
+					if( isSeqRange(square, testRange) ) { 
 						range.addAll( testRange );
-						testRange.clear();
+						return range;
 					}
+					testRange.clear();
+					
 				} else 
 					testRange.add( testSquare );
 			}
@@ -221,33 +235,43 @@ public class RangeUtil {
 		return SeqBot.get().getMyTokenColor();
 	}
 	
-	private static int countConsecutiveTokens( List<Square> squares, String color ) {
+	private static Set<Square> getConsecutiveTokens( List<Square> squares, String color ) {
+		Set<Square> consecutiveSquares = new TreeSet<>();
+		Set<Square> testSquares = new TreeSet<>();
 		int bestCount = 0;
-		int count = 0;
 		for( Square square: squares ) {
 			if( square.isWild() || (square.getColor() != null && square.getColor().equals(color)) ) {
-				count++;
+				testSquares.add( square );
 			} else {
-				if( count > bestCount )
-					bestCount = count;
-				count = 0;
+				if( testSquares.size() > bestCount ) {
+					bestCount = testSquares.size() ;
+					consecutiveSquares.clear();
+					consecutiveSquares.addAll( testSquares );
+				}
+				testSquares.clear();
 			}
 		}
-		return bestCount;
+		
+		if( testSquares.size() > bestCount ) {
+			bestCount = testSquares.size() ;
+			consecutiveSquares.clear();
+			consecutiveSquares.addAll( testSquares );
+		}
+		
+		return consecutiveSquares;
 	}
 	
-	private static int countTokens( Set<Square> squares, String color ) {
+	public static int countTokens( Set<Square> squares, String color ) {
 		int count = 0;
 		for( Square square: squares )
 			if( square.isWild() || (square.getColor() != null && square.getColor().equals(color)) ) 
 				count++;
 		return count;
 	}
+	
+	public static Set<Square> getSeqSquares( Square square, String color ) {
+		Set<Square> seqSquares = new TreeSet<>();
 
-	private static boolean isPotentialSequence( Square square, String color ) {
-		if( StringUtils.isNotBlank(square.getColor()) || square.isWild() ) 
-			return false;
-		int potentialSeqs = 0;
 		for( int axis: AXIS_DIRECTIONS ) {
 			Set<Square> potentialSeq = new TreeSet<>();
 			TreeSet<Square> axisSquares = getAxisSquares( square, axis );
@@ -260,8 +284,51 @@ public class RangeUtil {
 					squares.remove( 0 );
 				}
 				int totalTokens = countTokens(potentialSeq, color);
-				int consecutiveTokens = countConsecutiveTokens(new ArrayList<>(potentialSeq), color);
-				if( consecutiveTokens > 4 ) {
+				Set<Square> consecutiveTokens = getConsecutiveTokens(new ArrayList<>(potentialSeq), color);
+				if( consecutiveTokens.size() > 4 ) {
+					potentialSeq = removeSeqTokens(potentialSeq );
+					if( potentialSeq.size() == 10 && totalTokens == 9) 
+						seqSquares.addAll( consecutiveTokens );
+					else if( potentialSeq.contains( square ) )
+						seqSquares.addAll( consecutiveTokens );
+				}
+			}
+			
+		}	
+		
+		return seqSquares;
+	}
+	
+	private static Set<Square> removeSeqTokens(Set<Square> squares) {
+		if( squares.size() != 10 && SeqBot.MY_SEQ_1 != null )
+			squares.removeAll( SeqBot.MY_SEQ_1 );
+		if( squares.size() != 10 && SeqBot.OP_SEQ_1 != null )
+			squares.removeAll( SeqBot.OP_SEQ_1 );
+		return squares;
+	}
+
+	private static boolean isPotentialSequence( Square square, String color ) {
+		if( StringUtils.isNotBlank(square.getColor()) || square.isWild() ) 
+			return false;
+		int potentialSeqs = 0;
+		
+		if( square.getPos() == SeqBot.POTENTIAL_SEQ_BREAK )
+			System.out.println("Found pos: " + SeqBot.POTENTIAL_SEQ_BREAK);
+		
+		for( int axis: AXIS_DIRECTIONS ) {
+			Set<Square> potentialSeq = new TreeSet<>();
+			TreeSet<Square> axisSquares = getAxisSquares( square, axis );
+			if( axisSquares != null ) {
+				List<Square> squares = new ArrayList<>( getSeqRange(square, axisSquares, getOtherColor(color)) );
+				while( squares.size() > 4 ) {
+					List<Square> testSquares = squares.subList(0, 5);
+					if( getSeqSize( testSquares, color ) > 3 ) 
+						potentialSeq.addAll( testSquares );
+					squares.remove( 0 );
+				}
+				int totalTokens = countTokens(potentialSeq, color);
+				Set<Square> consecutiveTokens = getConsecutiveTokens(new ArrayList<>(potentialSeq), color);
+				if( consecutiveTokens.size() > 4 ) {
 					if( potentialSeq.size() == 10 && totalTokens == 9) 
 						potentialSeqs++;
 				} 
@@ -321,6 +388,7 @@ public class RangeUtil {
 	private static Square gameBlocker = null;
 	private static Square seqFinisher = null;
 	private static Square seqBlocker = null;
+		
 	private static final String NS = "NS";
 	private static final String WE = "WE";
 	private static final String NW = "NW";

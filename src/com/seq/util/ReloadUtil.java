@@ -1,20 +1,54 @@
 package com.seq.util;
 
-import java.util.StringTokenizer;
+import java.util.*;
+import com.seq.SeqBot;
 import com.seq.board.*;
 import com.seq.cards.*;
 
 public class ReloadUtil {
 
-	public static String HAND = "KD, JD, TD, 9H, 8H, 6S, 6C";
-	public static String BOARD = "4S@16=Blue, 5S@17=Red, KD@23=Blue, KC@26=Red, QC@27=Red, TC@28=Red, 8S@29=Red, KC@30=Blue, QH@34=Blue, TH@35=Red, 9C@38=Red, 9S@39=Red, QC@40=Red, 6H@42=Red, 3H@45=Blue, 7H@47=Red, 8C@48=Blue, TS@49=Red, AS@51=Blue, 5H@56=Blue, 6H@57=Blue, KS@61=Blue, 3C@65=Red, 5C@67=Blue, 6C@68=Blue";
-
-	public static String JACKS = "JS, JH, JC";
+	public static String HAND = "QS, JS, 8C, 6S, 5C, 4H, 4D";
 	
-	public static String REMOVED = "8S, 8H";
+	public static String BOARD = "3H@12=Blue, AC@20=Green, KD@23=Blue, TC@28=Green, KC@30=Blue, QH@34=Blue, QC@40=Green, TD@43=Blue, KH@44=Blue, 3H@45=Blue, 2H@46=Green, 7H@47=Blue, TC@50=Green, AS@51=Green, 9D@53=Green, AH@54=Green, 4H@55=Green, 5H@56=Green, 7C@58=Blue, 9C@60=Blue, 8D@63=Blue, 2C@64=Green, 3C@65=Blue, 4C@66=Green, 5C@67=Blue, KS@69=Blue, 7D@73=Green, 6D@74=Green, 5D@75=Green, 3D@77=Green, 2D@78=Blue, AH@85=Green, 8S@93=Green, 5S@96=Blue, 4S@97=Blue, 2S@99=Blue";
+		
+	public static String JACKS = "JD, JC, JC";
+	
+	public static String REMOVED = "";
+	
+	public static String MY_SEQ_SQUARES = "3H@12=Blue, KD@23=Blue, QH@34=Blue, 3H@45=Blue";
+	
+	public static String OP_SEQ_SQUARES = "";
 
 	public static void reload() {
 		try {
+			
+			StringTokenizer st6 = new StringTokenizer(OP_SEQ_SQUARES, ", " );
+			Set<Square> opSeqSquares = new TreeSet<>(); 
+			while(st6.hasMoreElements() ) {
+				String token = st6.nextToken();
+				String pos = token.substring( 3, token.indexOf( "=" ) );
+				String color = token.substring( 3 + pos.length() + 1 );
+				Square square = Board.getSquare( Integer.valueOf( pos ) );
+				square.setColor( color );
+				opSeqSquares.add( square );
+			}
+			
+			if( !opSeqSquares.isEmpty() )
+				SeqBot.OP_SEQ_1 = opSeqSquares;
+			
+			StringTokenizer st5 = new StringTokenizer(MY_SEQ_SQUARES, ", " );
+			Set<Square> mySeqSquares = new TreeSet<>(); 
+			while(st5.hasMoreElements() ) {
+				String token = st5.nextToken();
+				String pos = token.substring( 3, token.indexOf( "=" ) );
+				String color = token.substring( 3 + pos.length() + 1 );
+				Square square = Board.getSquare( Integer.valueOf( pos ) );
+				square.setColor( color );
+				mySeqSquares.add( square );
+			}
+			
+			if( !mySeqSquares.isEmpty() )
+				SeqBot.MY_SEQ_1 = mySeqSquares;
 			
 			StringTokenizer st3 = new StringTokenizer(HAND, ", " );
 			while(st3.hasMoreElements() ) {
@@ -34,8 +68,7 @@ public class ReloadUtil {
 				String color = token.substring( 3 + pos.length() + 1 );
 				Card card = new Card( suit, rank );
 				Square square = Board.getSquare( Integer.valueOf( pos ) );
-				if( square != null )
-					square.setColor( color );
+				square.setColor( color );
 				Deck.remove( card );
 				Board.addToken( square.getPos(), color);
 			}

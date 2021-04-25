@@ -12,7 +12,8 @@ public class Hand {
 		List<Card> hand = new ArrayList<>();
 		for( Card card: CARDS.keySet() ) {
 			hand.add( card );
-			if(CARDS.get( card ) == 2 ) hand.add( card );
+			if(CARDS.get( card ) == 2 ) 
+				hand.add( card );
 		}
 		return hand;
 	}
@@ -73,11 +74,11 @@ public class Hand {
 		return count;
 	}
 	
-	public static Set<Card> getTwoEyeJacks() {
+	public static List<Card> getTwoEyeJacks() {
 		return twoEyeJacks;
 	}
 	
-	public static Set<Card> getOneEyeJacks() {
+	public static List<Card> getOneEyeJacks() {
 		return oneEyeJacks;
 	}
 	
@@ -89,8 +90,10 @@ public class Hand {
 		if( CARDS.get( card ) > 2 )
 			throw new Exception( "Cannot have more than 2 of the same card in hand.  Found " + CARDS.get( card ) + " for card: " + card );
 		System.out.println( "SeqBot drew card: " + card );
-		if( card.isOneEyeJack() ) oneEyeJacks.add( card );
-		if( card.isTwoEyeJack() ) twoEyeJacks.add( card );
+		if( card.isOneEyeJack() ) 
+			oneEyeJacks.add( card );
+		if( card.isTwoEyeJack() ) 
+			twoEyeJacks.add( card );
 		if( !SCORES.containsKey( card ) && !card.getRank().equals( CardRank.CARD_J ) ) 
 			SCORES.put( card, 0.0 );
 	}
@@ -130,8 +133,8 @@ public class Hand {
 	// 45 chars
 	private static final String SPACER = PanelBuilder.SPACER + "                              ";
 	private static Map<Card, Double> SCORES = new TreeMap<>();
-	private static final Set<Card> twoEyeJacks = new HashSet<>();
-	private static final Set<Card> oneEyeJacks = new HashSet<>();
+	private static final List<Card> twoEyeJacks = new ArrayList<>();
+	private static final List<Card> oneEyeJacks = new ArrayList<>();
 	private static final Map<Card, Integer> CARDS = new TreeMap<>();
 	private static final Map<Square, Map<Integer, Set<Square>>> AXIS_RANGES = new HashMap<>();
 }

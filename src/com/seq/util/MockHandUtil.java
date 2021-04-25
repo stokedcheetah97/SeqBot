@@ -14,7 +14,7 @@ public class MockHandUtil {
 	public static void init() {
 		try {
 			SeqBot.get().setMyTokenColor( TokenColor.BLUE );
-			SeqBot.get().setOpponentTokenColor( TokenColor.RED );
+			SeqBot.get().setOpponentTokenColor( SeqBot.OP_COLOR );
 			
 			//testNWScenario();
 			//testNormal();

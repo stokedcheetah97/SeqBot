@@ -25,7 +25,7 @@ public class GuiAdapter extends JFrame {
 	public void refresh() {
 		
 		SeqBot.get().setMyTokenColor( TokenColor.BLUE );
-		SeqBot.get().setOpponentTokenColor( TokenColor.RED );
+		SeqBot.get().setOpponentTokenColor( SeqBot.OP_COLOR );
 		
 		if( SeqBot.get().getErrMsg() != null ) 
 			GuiAdapter.showError();
