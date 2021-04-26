@@ -11,12 +11,18 @@ import com.seq.SeqBot;
 import com.seq.cards.*;
 import com.seq.util.*;
 
+import com.formdev.flatlaf.*;
 
 
 public class PanelBuilder {
 	
 	public static JPanel buildGuiPanel() {
 		
+	try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
 		JPanel p = new JPanel( new BorderLayout() );
 		p.add( buildCardPanel(), BorderLayout.NORTH );
 		p.add( buildButtonPanel(), BorderLayout.CENTER );
@@ -25,6 +31,11 @@ public class PanelBuilder {
 	}
 
 	private static JPanel buildCardPanel() {
+			try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
 		
 		JPanel northPanel = new JPanel( new BorderLayout() );
 		northPanel.add( new JLabel( SPACER ), BorderLayout.NORTH );
@@ -50,6 +61,12 @@ public class PanelBuilder {
 	
 	private static JPanel buildMsgPanel() {
 		
+			try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
+		
 		JTextArea msgBox = GuiAdapter.get().getMsgBox(); 
 		msgBox.setFont(msgBox.getFont().deriveFont(14f));
 		msgBox.getFont().isBold();
@@ -62,6 +79,12 @@ public class PanelBuilder {
 	}
 	
 	private static JPanel buildColorPanel() {
+		
+			try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
 		
 		JPanel myColorPanel = new JPanel( new BorderLayout() );
 		myColorPanel.add( new JLabel( SPACER + "  My color:    " + SPACER ), BorderLayout.WEST );
@@ -91,6 +114,12 @@ public class PanelBuilder {
 	
 	private static JPanel buildDrawPanel() {
 		
+			try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
+		
 		JPanel drawPanel = new JPanel( new BorderLayout() );
 		drawPanel.add( new JLabel( SPACER + "  Draw Card:  " + SPACER), BorderLayout.WEST );
 		drawPanel.add( GuiAdapter.get().getCardRankPicklist(), BorderLayout.CENTER );
@@ -103,6 +132,12 @@ public class PanelBuilder {
 	}
 	
 	private static JPanel buildOppnentMovePanel() {
+		
+			try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
 		
 		JPanel movePanel = new JPanel( new BorderLayout() );
 		movePanel.add( new JLabel( SPACER + "  Opponents move:       " ), BorderLayout.WEST );
@@ -129,6 +164,12 @@ public class PanelBuilder {
 	}
 	
 	private static JPanel buildButtonPanel() {
+		
+			try {
+    		UIManager.setLookAndFeel( new FlatDarkLaf() );
+      } catch( Exception ex ) {
+    		System.err.println( "Failed to initialize LaF" );
+        }
 		
 		JButton nextMoveButton = new JButton( "Next Move" );
 		JButton updateButton = new JButton( "Update" );
